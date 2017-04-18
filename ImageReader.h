@@ -1,0 +1,14 @@
+//
+// Created by Long Bui on 18.04.17.
+//
+
+#ifndef FRUITRECOGNITION_IMAGEREADER_H
+#define FRUITRECOGNITION_IMAGEREADER_H
+
+
+class ImageReader {
+
+};
+
+
+#endif //FRUITRECOGNITION_IMAGEREADER_H
