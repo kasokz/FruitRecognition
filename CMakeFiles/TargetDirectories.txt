@@ -1,3 +1,0 @@
-/Users/longbui/CLionProjects/FruitRecognition/CMakeFiles/rebuild_cache.dir
-/Users/longbui/CLionProjects/FruitRecognition/CMakeFiles/edit_cache.dir
-/Users/longbui/CLionProjects/FruitRecognition/CMakeFiles/FruitRecognition.dir
