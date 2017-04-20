@@ -4,9 +4,7 @@
 
 using namespace cv;
 
-void splitAndMerge(shared_ptr<Quadtree> tree, double thresholdValue);
-
-bool checkHomogeneityRegion(Mat image);
+vector<String, allocator<String>> getAllFileNames();
 
 void segmentImage(Mat &rgbImage, const Mat &thresholdImage) {
     for (int row = 0; row < rgbImage.rows; ++row) {
@@ -21,8 +19,7 @@ void segmentImage(Mat &rgbImage, const Mat &thresholdImage) {
     }
 }
 
-int main(int argc, char **argv) {
-
+vector<String, allocator<String>> getAllFileNames() {
     String fruits[] = {
             "acerolas", "apples", "apricots", "avocados", "bananas", "blackberries", "blueberries",
             "cantaloupes", "cherries", "coconuts", "figs", "grapefruits", "grapes", "guava", "kiwifruit",
@@ -37,6 +34,12 @@ int main(int argc, char **argv) {
         glob(folder + fruit, filesForFruit);
         filenames.insert(filenames.end(), filesForFruit.begin(), filesForFruit.end());
     }
+    return filenames;
+}
+
+int main(int argc, char **argv) {
+
+    vector<String, allocator<String>> filenames = getAllFileNames();
 
     for (String file : filenames) {
         Mat rgbImage;
@@ -67,3 +70,4 @@ int main(int argc, char **argv) {
     }
     return 0;
 }
+
