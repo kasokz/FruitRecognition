@@ -23,48 +23,47 @@ void segmentImage(Mat &rgbImage, const Mat &thresholdImage) {
 
 int main(int argc, char **argv) {
 
-    if (argc != 2) {
-        printf("usage: DisplayImage.out <Image_Path>\n");
-        return -1;
+    String fruits[] = {
+            "acerolas", "apples", "apricots", "avocados", "bananas", "blackberries", "blueberries",
+            "cantaloupes", "cherries", "coconuts", "figs", "grapefruits", "grapes", "guava", "kiwifruit",
+            "lemons", "limes", "mangos", "olives", "oranges", "passionfruit", "peaches", "pears", "pineapples",
+            "plums", "pomegranates", "raspberries", "strawberries", "tomatoes", "watermelons"};
+
+    vector<String> filenames;
+    String folder = "FIDS30/";
+
+    for (String fruit: fruits) {
+        vector<String> filesForFruit;
+        glob(folder + fruit, filesForFruit);
+        filenames.insert(filenames.end(), filesForFruit.begin(), filesForFruit.end());
     }
 
-    Mat rgbImage;
-    Mat grayImage;
-    Mat splitAndMergeImage;
+    for (String file : filenames) {
+        Mat rgbImage;
+        Mat grayImage;
 
-    rgbImage = imread(argv[1], 1);
+        rgbImage = imread(file);
 
-    if (!rgbImage.data) {
-        printf("No image data \n");
-        return -1;
+        if (!rgbImage.data) {
+            cout << file << endl;
+            printf("No image data \n");
+        } else {
+
+            cvtColor(rgbImage, grayImage, COLOR_RGB2GRAY);
+
+            shared_ptr<Quadtree> root(new Quadtree(grayImage));
+            root->splitAndMerge();
+
+            Mat thresholdImage;
+            double threshholdValue = threshold(root->getImage(), thresholdImage, 0, 255,
+                                               CV_THRESH_BINARY + CV_THRESH_OTSU);
+
+            segmentImage(rgbImage, thresholdImage);
+            resize(rgbImage, rgbImage, Size(600, 400)); // to half size or even smaller
+            namedWindow("Display frame", CV_WINDOW_AUTOSIZE);
+            imshow("Display frame", rgbImage);
+            waitKey(0);
+        }
     }
-
-    cvtColor(rgbImage, grayImage, COLOR_RGB2GRAY);
-    cvtColor(rgbImage, splitAndMergeImage, COLOR_RGB2GRAY);
-
-    shared_ptr<Quadtree> root(new Quadtree(splitAndMergeImage));
-    root->splitAndMerge();
-
-    Mat thresholdImage;
-    double threshholdValue = threshold(splitAndMergeImage, thresholdImage, 0, 255, CV_THRESH_BINARY + CV_THRESH_OTSU);
-
-    namedWindow("original", WINDOW_AUTOSIZE);
-    imshow("original", rgbImage);
-
-    namedWindow("Split and Merge", WINDOW_AUTOSIZE);
-    imshow("Split and Merge", root->getImage());
-
-    namedWindow("gray", WINDOW_AUTOSIZE);
-    imshow("gray", grayImage);
-
-    namedWindow("otsu", WINDOW_AUTOSIZE);
-    imshow("otsu", thresholdImage);
-
-    namedWindow("segmented", WINDOW_AUTOSIZE);
-    segmentImage(rgbImage, thresholdImage);
-    imshow("segmented", rgbImage);
-
-    waitKey(0);
-
     return 0;
 }
