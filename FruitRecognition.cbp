@@ -84,13 +84,13 @@
 				</MakeCommands>
 			</Target>
 		</Build>
-		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/ImageReader.cpp">
-			<Option target="FruitRecognition"/>
-		</Unit>
-		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/ImageReader.h">
-			<Option target="FruitRecognition"/>
-		</Unit>
 		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/main.cpp">
+			<Option target="FruitRecognition"/>
+		</Unit>
+		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/segmentation/Quadtree.cpp">
+			<Option target="FruitRecognition"/>
+		</Unit>
+		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/segmentation/Quadtree.h">
 			<Option target="FruitRecognition"/>
 		</Unit>
 		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/CMakeLists.txt">

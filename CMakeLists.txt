@@ -3,7 +3,7 @@ project(FruitRecognition)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(SOURCE_FILES main.cpp ImageReader.cpp ImageReader.h)
+set(SOURCE_FILES main.cpp segmentation/Quadtree.cpp segmentation/Quadtree.h)
 add_executable(FruitRecognition ${SOURCE_FILES})
 
 find_package(OpenCV REQUIRED)
