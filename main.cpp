@@ -1,8 +1,10 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <memory>
 #include "segmentation/Quadtree.h"
 
 using namespace cv;
+using namespace std;
 
 vector<String, allocator<String>> getAllFileNames();
 
@@ -19,7 +21,7 @@ void segmentImage(Mat &rgbImage, const Mat &thresholdImage) {
     }
 }
 
-vector<String, allocator<String>> getAllFileNames() {
+vector<String> getAllFileNames() {
     String fruits[] = {
             "acerolas", "apples", "apricots", "avocados", "bananas", "blackberries", "blueberries",
             "cantaloupes", "cherries", "coconuts", "figs", "grapefruits", "grapes", "guava", "kiwifruit",
@@ -27,7 +29,7 @@ vector<String, allocator<String>> getAllFileNames() {
             "plums", "pomegranates", "raspberries", "strawberries", "tomatoes", "watermelons"};
 
     vector<String> filenames;
-    String folder = "FIDS30/";
+    String folder = "G:\\CLionProjects\\FruitRecognition\\fruits\\";
 
     for (String fruit: fruits) {
         vector<String> filesForFruit;
@@ -38,12 +40,12 @@ vector<String, allocator<String>> getAllFileNames() {
 }
 
 int main(int argc, char **argv) {
+    namedWindow("Display frame", CV_WINDOW_AUTOSIZE);
 
-    vector<String, allocator<String>> filenames = getAllFileNames();
+    vector<String> filenames = getAllFileNames();
 
     for (String file : filenames) {
         Mat rgbImage;
-        Mat grayImage;
 
         rgbImage = imread(file);
 
@@ -51,20 +53,18 @@ int main(int argc, char **argv) {
             cout << file << endl;
             printf("No image data \n");
         } else {
-
+            Mat grayImage;
             cvtColor(rgbImage, grayImage, COLOR_RGB2GRAY);
 
             shared_ptr<Quadtree> root(new Quadtree(grayImage));
             root->splitAndMerge();
-
             Mat thresholdImage;
-            double threshholdValue = threshold(root->getImage(), thresholdImage, 0, 255,
+            threshold(grayImage, thresholdImage, 0, 255,
                                                CV_THRESH_BINARY + CV_THRESH_OTSU);
-
             segmentImage(rgbImage, thresholdImage);
-            resize(rgbImage, rgbImage, Size(600, 400)); // to half size or even smaller
-            namedWindow("Display frame", CV_WINDOW_AUTOSIZE);
+            resize(rgbImage, rgbImage, Size(256, 256));
             imshow("Display frame", rgbImage);
+
             waitKey(0);
         }
     }

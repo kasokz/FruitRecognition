@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include <memory>
 
 #ifndef FRUITRECOGNITION_QUADTREE_H
 #define FRUITRECOGNITION_QUADTREE_H
@@ -41,8 +42,6 @@ public:
     void merge();
 
     virtual ~Quadtree();
-
-    Mat getImage();
 };
 
 

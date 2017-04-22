@@ -4,7 +4,7 @@
 
 #include "Quadtree.h"
 
-bool checkHomogeneityRegion(Mat image);
+bool checkHomogeneityRegion(Mat image, Scalar &mean);
 
 bool checkHomogeneityNeighbours(Mat image1, Mat image2, Scalar &mean);
 
@@ -13,10 +13,6 @@ Quadtree::Quadtree(Mat image) {
 }
 
 Quadtree::~Quadtree() {
-}
-
-Mat Quadtree::getImage() {
-    return this->root->image;
 }
 
 void Quadtree::splitAndMerge() {
@@ -32,14 +28,14 @@ void Quadtree::merge() {
     this->root->image = this->root->merge();
 }
 
-bool checkHomogeneityRegion(Mat image) {
+bool checkHomogeneityRegion(Mat image, Scalar &mean) {
     if (image.rows == 0 || image.cols == 0) {
         return true;
     }
-    Scalar stddev, mean;
+    Scalar stddev;
     meanStdDev(image, mean, stddev);
     // Homogen, falls Standardabweichung < 5.8 oder Anzahl Pixel im Segment <= 25
-    return (stddev[0] <= 5.8) || (image.rows * image.cols <= 25);;
+    return (stddev[0] <= 20) || (image.rows * image.cols <= 25);;
 }
 
 bool checkHomogeneityNeighbours(Mat image1, Mat image2, Scalar &mean) {
@@ -59,7 +55,8 @@ bool checkHomogeneityNeighbours(Mat image1, Mat image2, Scalar &mean) {
 }
 
 void Quadtree::Node::split() {
-    if (!checkHomogeneityRegion(image)) {
+    Scalar mean;
+    if (!checkHomogeneityRegion(image, mean)) {
         upperLeft = shared_ptr<Node>(new Node(Mat(image,
                                                   Range(0, image.rows / 2),
                                                   Range(0, image.cols / 2))));
@@ -76,6 +73,8 @@ void Quadtree::Node::split() {
         lowerLeft->split();
         lowerRight->split();
         upperRight->split();
+    } else {
+        image.setTo(mean[0]);
     }
 }
 
