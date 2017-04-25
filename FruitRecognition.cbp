@@ -87,10 +87,19 @@
 		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/feature-extraction/Color.cpp">
 			<Option target="FruitRecognition"/>
 		</Unit>
+		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/feature-extraction/Color.h">
+			<Option target="FruitRecognition"/>
+		</Unit>
 		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/feature-extraction/Shape.cpp">
 			<Option target="FruitRecognition"/>
 		</Unit>
+		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/feature-extraction/Shape.h">
+			<Option target="FruitRecognition"/>
+		</Unit>
 		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/feature-extraction/Texture.cpp">
+			<Option target="FruitRecognition"/>
+		</Unit>
+		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/feature-extraction/Texture.h">
 			<Option target="FruitRecognition"/>
 		</Unit>
 		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/main.cpp">

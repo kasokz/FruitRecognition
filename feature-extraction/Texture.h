@@ -1,0 +1,10 @@
+//
+// Created by Long Bui on 25.04.17.
+//
+
+#ifndef FRUITRECOGNITION_TEXTURE_H
+#define FRUITRECOGNITION_TEXTURE_H
+
+
+
+#endif //FRUITRECOGNITION_TEXTURE_H

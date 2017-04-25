@@ -1,0 +1,10 @@
+//
+// Created by Long Bui on 25.04.17.
+//
+
+#ifndef FRUITRECOGNITION_COLOR_H_H
+#define FRUITRECOGNITION_COLOR_H_H
+
+
+
+#endif //FRUITRECOGNITION_COLOR_H_H
