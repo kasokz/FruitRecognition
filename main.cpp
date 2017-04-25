@@ -29,7 +29,7 @@ vector<String> getAllFileNames() {
             "plums", "pomegranates", "raspberries", "strawberries", "tomatoes", "watermelons"};
 
     vector<String> filenames;
-    String folder = "G:\\CLionProjects\\FruitRecognition\\fruits\\";
+    String folder = "FIDS30/";
 
     for (String fruit: fruits) {
         vector<String> filesForFruit;
