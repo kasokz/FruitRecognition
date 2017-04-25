@@ -4,8 +4,8 @@
 
 #include "Quadtree.h"
 
-const int meanThreshold = 20;
-const int minRegionSize = 20;
+const int meanThreshold = 5;
+const int minRegionSize = 4;
 
 bool checkHomogeneityRegion(Mat image, Scalar &mean);
 
@@ -38,7 +38,7 @@ bool checkHomogeneityRegion(Mat image, Scalar &mean) {
     Scalar stddev;
     meanStdDev(image, mean, stddev);
     // Homogen, falls Standardabweichung < 5.8 oder Anzahl Pixel im Segment <= 25
-    return (stddev[0] <= meanThreshold) || (image.rows * image.cols <= minRegionSize);;
+    return (stddev[0] <= meanThreshold) || (image.rows * image.cols <= minRegionSize);
 }
 
 bool checkHomogeneityNeighbours(Mat image1, Mat image2, Scalar &mean) {
