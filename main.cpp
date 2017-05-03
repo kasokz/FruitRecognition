@@ -11,7 +11,7 @@ vector<String, allocator<String>> getAllFileNames();
 void segmentImage(Mat &rgbImage, const Mat &thresholdImage) {
     for (int row = 0; row < rgbImage.rows; ++row) {
         for (int col = 0; col < rgbImage.cols; ++col) {
-            if (thresholdImage.at<uchar>(row, col)) {
+            if (!thresholdImage.at<uchar>(row, col)) {
                 Vec3b *pixel = rgbImage.ptr<Vec3b>(row, col);
                 (*pixel)[0] = 255;
                 (*pixel)[1] = 255;
@@ -39,6 +39,21 @@ vector<String> getAllFileNames() {
     return filenames;
 }
 
+void fillHolesInThreshold(const Mat &grayImage, Mat &thresholdImage) {
+    threshold(grayImage, thresholdImage, 0, 255,
+                      CV_THRESH_BINARY_INV + CV_THRESH_OTSU);
+
+    // Floodfill from point (0, 0)
+    Mat im_floodfill = thresholdImage.clone();
+    floodFill(im_floodfill, Point(0, 0), Scalar(255));
+
+    // Invert floodfilled image
+    bitwise_not(im_floodfill, im_floodfill);
+
+    // Combine the two images to get the foreground.
+    thresholdImage = (thresholdImage | im_floodfill);
+}
+
 int main(int argc, char **argv) {
     namedWindow("Display frame", CV_WINDOW_AUTOSIZE);
 
@@ -58,9 +73,10 @@ int main(int argc, char **argv) {
 
             shared_ptr<Quadtree> root(new Quadtree(grayImage));
             root->splitAndMerge();
+
             Mat thresholdImage;
-            threshold(grayImage, thresholdImage, 0, 255,
-                                               CV_THRESH_BINARY + CV_THRESH_OTSU);
+            fillHolesInThreshold(grayImage, thresholdImage);
+
             segmentImage(rgbImage, thresholdImage);
             resize(rgbImage, rgbImage, Size(256, 256));
             imshow("Display frame", rgbImage);
