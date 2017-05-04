@@ -4,7 +4,7 @@
 #include "segmentation/Quadtree.h"
 #include "feature-extraction/Color.h"
 #include "feature-extraction/Texture.h"
-#include "pca/PrincipalComponentAnalysis.h"
+#include "feature-extraction/PrincipalComponentAnalysis.h"
 #include <eigen3/Eigen/Core>
 
 using namespace cv;
@@ -84,8 +84,10 @@ int main(int argc, char **argv) {
                 fillHolesInThreshold(grayImage, thresholdImage);
 
                 segmentImage(rgbImage, thresholdImage);
-                resize(rgbImage, rgbImage, Size(256, 256));
-                imshow("Display frame", rgbImage);
+//                imshow("Display frame", rgbImage);
+                cout << rgbImage.isContinuous() << endl;
+                vector<double> extractedFeatures = extractColorHistogram(rgbImage);
+                performPCA(extractedFeatures, 14);
                 waitKey(0);
             }
         }
