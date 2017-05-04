@@ -3,11 +3,21 @@
 #include <memory>
 #include "segmentation/Quadtree.h"
 #include "feature-extraction/Color.h"
+#include "feature-extraction/Texture.h"
+#include "pca/PrincipalComponentAnalysis.h"
+#include <eigen3/Eigen/Core>
 
 using namespace cv;
 using namespace std;
 
-vector<String, allocator<String>> getAllFileNames();
+map<String, vector<String>> getAllFileNames();
+
+String fruits[] = {
+        "acerolas", "apples", "apricots", "avocados", "bananas", "blackberries", "blueberries",
+        "cantaloupes", "cherries", "coconuts", "figs", "grapefruits", "grapes", "guava", "kiwifruit",
+        "lemons", "limes", "mangos", "olives", "oranges", "passionfruit", "peaches", "pears", "pineapples",
+        "plums", "pomegranates", "raspberries", "strawberries", "tomatoes", "watermelons"};
+
 
 void segmentImage(Mat &rgbImage, const Mat &thresholdImage) {
     for (int row = 0; row < rgbImage.rows; ++row) {
@@ -22,20 +32,14 @@ void segmentImage(Mat &rgbImage, const Mat &thresholdImage) {
     }
 }
 
-vector<String> getAllFileNames() {
-    String fruits[] = {
-            "acerolas", "apples", "apricots", "avocados", "bananas", "blackberries", "blueberries",
-            "cantaloupes", "cherries", "coconuts", "figs", "grapefruits", "grapes", "guava", "kiwifruit",
-            "lemons", "limes", "mangos", "olives", "oranges", "passionfruit", "peaches", "pears", "pineapples",
-            "plums", "pomegranates", "raspberries", "strawberries", "tomatoes", "watermelons"};
-
-    vector<String> filenames;
+map<String, vector<String>> getAllFileNames() {
+    map<String, vector<String>> filenames;
     String folder = "FIDS30/";
 
     for (String fruit: fruits) {
         vector<String> filesForFruit;
         glob(folder + fruit, filesForFruit);
-        filenames.insert(filenames.end(), filesForFruit.begin(), filesForFruit.end());
+        filenames[fruit] = filesForFruit;
     }
     return filenames;
 }
@@ -57,36 +61,33 @@ void fillHolesInThreshold(const Mat &grayImage, Mat &thresholdImage) {
 
 int main(int argc, char **argv) {
     namedWindow("Display frame", CV_WINDOW_AUTOSIZE);
-    namedWindow("reduced", CV_WINDOW_AUTOSIZE);
-    namedWindow("normal", CV_WINDOW_AUTOSIZE);
 
-    vector<String> filenames = getAllFileNames();
+    map<String, vector<String>> filenames = getAllFileNames();
 
-    for (String file : filenames) {
-        Mat rgbImage;
+    for (int i = 0; i < fruits->length(); i++) {
+        for (String fruitFile: filenames[fruits[i]]) {
+            Mat rgbImage;
 
-        rgbImage = imread(file);
+            rgbImage = imread(fruitFile);
 
-        if (!rgbImage.data) {
-            cout << file << endl;
-            printf("No image data \n");
-        } else {
-//            Mat grayImage;
-//            cvtColor(rgbImage, grayImage, COLOR_RGB2GRAY);
-//
-//            shared_ptr<Quadtree> root(new Quadtree(grayImage));
-//            root->splitAndMerge();
-//
-//            Mat thresholdImage;
-//            fillHolesInThreshold(grayImage, thresholdImage);
-//
-//            segmentImage(rgbImage, thresholdImage);
-//            resize(rgbImage, rgbImage, Size(256, 256));
-//            imshow("Display frame", rgbImage);
-            imshow("normal", rgbImage);
-            extractColorHistogram(rgbImage);
-            imshow("reduced", rgbImage);
-            waitKey(0);
+            if (!rgbImage.data) {
+                cout << fruitFile << endl;
+                printf("No image data \n");
+            } else {
+                Mat grayImage;
+                cvtColor(rgbImage, grayImage, COLOR_RGB2GRAY);
+
+                shared_ptr<Quadtree> root(new Quadtree(grayImage));
+                root->splitAndMerge();
+
+                Mat thresholdImage;
+                fillHolesInThreshold(grayImage, thresholdImage);
+
+                segmentImage(rgbImage, thresholdImage);
+                resize(rgbImage, rgbImage, Size(256, 256));
+                imshow("Display frame", rgbImage);
+                waitKey(0);
+            }
         }
     }
     return 0;

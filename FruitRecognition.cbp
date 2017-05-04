@@ -105,6 +105,12 @@
 		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/main.cpp">
 			<Option target="FruitRecognition"/>
 		</Unit>
+		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/pca/PrincipalComponentAnalysis.cpp">
+			<Option target="FruitRecognition"/>
+		</Unit>
+		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/pca/PrincipalComponentAnalysis.h">
+			<Option target="FruitRecognition"/>
+		</Unit>
 		<Unit filename="/Users/longbui/CLionProjects/FruitRecognition/segmentation/Quadtree.cpp">
 			<Option target="FruitRecognition"/>
 		</Unit>
