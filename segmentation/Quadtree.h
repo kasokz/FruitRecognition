@@ -1,13 +1,11 @@
 //
 // Created by Long Bui on 19.04.17.
 //
-#pragma once
+#ifndef FRUITRECOGNITION_QUADTREE_H
+#define FRUITRECOGNITION_QUADTREE_H
 
 #include <opencv2/opencv.hpp>
 #include <memory>
-
-#ifndef FRUITRECOGNITION_QUADTREE_H
-#define FRUITRECOGNITION_QUADTREE_H
 
 using namespace std;
 using namespace cv;

@@ -2,6 +2,7 @@
 #include <opencv2/opencv.hpp>
 #include <memory>
 #include "segmentation/Quadtree.h"
+#include "feature-extraction/Color.h"
 
 using namespace cv;
 using namespace std;
@@ -41,7 +42,7 @@ vector<String> getAllFileNames() {
 
 void fillHolesInThreshold(const Mat &grayImage, Mat &thresholdImage) {
     threshold(grayImage, thresholdImage, 0, 255,
-                      CV_THRESH_BINARY_INV + CV_THRESH_OTSU);
+              CV_THRESH_BINARY_INV + CV_THRESH_OTSU);
 
     // Floodfill from point (0, 0)
     Mat im_floodfill = thresholdImage.clone();
@@ -56,6 +57,8 @@ void fillHolesInThreshold(const Mat &grayImage, Mat &thresholdImage) {
 
 int main(int argc, char **argv) {
     namedWindow("Display frame", CV_WINDOW_AUTOSIZE);
+    namedWindow("reduced", CV_WINDOW_AUTOSIZE);
+    namedWindow("normal", CV_WINDOW_AUTOSIZE);
 
     vector<String> filenames = getAllFileNames();
 
@@ -68,19 +71,21 @@ int main(int argc, char **argv) {
             cout << file << endl;
             printf("No image data \n");
         } else {
-            Mat grayImage;
-            cvtColor(rgbImage, grayImage, COLOR_RGB2GRAY);
-
-            shared_ptr<Quadtree> root(new Quadtree(grayImage));
-            root->splitAndMerge();
-
-            Mat thresholdImage;
-            fillHolesInThreshold(grayImage, thresholdImage);
-
-            segmentImage(rgbImage, thresholdImage);
-            resize(rgbImage, rgbImage, Size(256, 256));
-            imshow("Display frame", rgbImage);
-
+//            Mat grayImage;
+//            cvtColor(rgbImage, grayImage, COLOR_RGB2GRAY);
+//
+//            shared_ptr<Quadtree> root(new Quadtree(grayImage));
+//            root->splitAndMerge();
+//
+//            Mat thresholdImage;
+//            fillHolesInThreshold(grayImage, thresholdImage);
+//
+//            segmentImage(rgbImage, thresholdImage);
+//            resize(rgbImage, rgbImage, Size(256, 256));
+//            imshow("Display frame", rgbImage);
+            imshow("normal", rgbImage);
+            extractColorHistogram(rgbImage);
+            imshow("reduced", rgbImage);
             waitKey(0);
         }
     }
