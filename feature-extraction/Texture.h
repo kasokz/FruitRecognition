@@ -10,5 +10,19 @@ using namespace std;
 using namespace cv;
 
 vector<int> histogramOpt(const Mat &grayImage);
+vector<int> histogramLong(const Mat &grayImage);
+void histogramCompare(const Mat &grayImage);
+vector<double> probability(const vector<int> hist, int size);
+double mean(const vector<double> &p);
+double contrast(const vector<double> &p);
+double homogenity(const vector<double> &p);
+double variance(const vector<double> &p, double mean);
+double skewness(const vector<double> &p, double mean, double variance);
+double kurtosis(const vector<double> &p, double mean, double variance);
+double energy(const vector<double> &p);
+double entropy(const vector<double> &p);
+vector<double> unser(const Mat &grayImage);
+vector<double> unserHist(const Mat &grayImage);
+void unserTest(const Mat &grayImage);
 
 #endif //FRUITRECOGNITION_TEXTURE_H
