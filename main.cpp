@@ -5,7 +5,6 @@
 #include "feature-extraction/Color.h"
 #include "feature-extraction/Texture.h"
 #include "feature-extraction/PrincipalComponentAnalysis.h"
-#include <eigen3/Eigen/Core>
 
 using namespace cv;
 using namespace std;
