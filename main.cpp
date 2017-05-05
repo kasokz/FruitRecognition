@@ -13,7 +13,7 @@ using namespace std;
 map<String, vector<String>> getAllFileNames();
 
 String fruits[] = {
-        "acerolas", "apples", "apricots", "avocados", "bananas", "blackberries", "blueberries",
+        "apples", "apricots", "avocados", "bananas", "blackberries", "blueberries",
         "cantaloupes", "cherries", "coconuts", "figs", "grapefruits", "grapes", "guava", "kiwifruit",
         "lemons", "limes", "mangos", "olives", "oranges", "passionfruit", "peaches", "pears", "pineapples",
         "plums", "pomegranates", "raspberries", "strawberries", "tomatoes", "watermelons"};
@@ -62,9 +62,20 @@ void fillHolesInThreshold(const Mat &grayImage, Mat &thresholdImage) {
 int main(int argc, char **argv) {
     namedWindow("Display frame", CV_WINDOW_AUTOSIZE);
 
+//    vector<double> a = {2.5, 0.5, 2.2, 1.9, 3.1, 2.3, 2, 1, 1.5, 1.1};
+//    vector<double> b = {2.4, 0.7, 2.9, 2.2, 3.0, 2.7, 1.6, 1.1, 1.6, 0.9};
+//
+//    shared_ptr<PrincipalComponentAnalysis> covTest(new PrincipalComponentAnalysis());
+//    covTest->addFruitFeatures(a);
+//    covTest->addFruitFeatures(b);
+//
+//    covTest->performPCA(14);
+
     map<String, vector<String>> filenames = getAllFileNames();
 
     for (int i = 0; i < fruits->length(); i++) {
+        shared_ptr<PrincipalComponentAnalysis> pca(new PrincipalComponentAnalysis());
+
         for (String fruitFile: filenames[fruits[i]]) {
             Mat rgbImage;
 
@@ -85,12 +96,14 @@ int main(int argc, char **argv) {
 
                 segmentImage(rgbImage, thresholdImage);
 //                imshow("Display frame", rgbImage);
-                cout << rgbImage.isContinuous() << endl;
+
                 vector<double> extractedFeatures = extractColorHistogram(rgbImage);
-                performPCA(extractedFeatures, 14);
-                waitKey(0);
+
+                pca->addFruitFeatures(extractedFeatures);
             }
         }
+        pca->performPCA(0);
+        waitKey(0);
     }
     return 0;
 }

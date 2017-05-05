@@ -7,5 +7,5 @@ set(SOURCE_FILES main.cpp segmentation/Quadtree.cpp segmentation/Quadtree.h feat
 add_executable(FruitRecognition ${SOURCE_FILES})
 
 find_package(OpenCV REQUIRED)
-include_directories(${OpenCV_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR})
+include_directories(${OpenCV_INCLUDE_DIRS})
 target_link_libraries(FruitRecognition ${OpenCV_LIBS})

@@ -6,6 +6,8 @@
 
 #include <iostream>
 #include <opencv2/core.hpp>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Eigenvalues>
 
 using namespace std;
 using namespace cv;
@@ -14,14 +16,16 @@ class PrincipalComponentAnalysis {
 private:
     Mat fruitGroup;
 
+    void normalizeValues(vector<double> &values);
+
+    Mat calculateCovarianceMatrix();
+
 public:
     PrincipalComponentAnalysis();
 
-    vector<double> performPCA(vector<double> input, int count);
+    Mat performPCA(int count);
 
     void addFruitFeatures(vector<double> fruitFeatures);
-
-    void normalizeValues(vector<double, allocator<double>> *values);
 };
 
 #endif //FRUITRECOGNITION_PRINCIPALCOMPONENTANALYSIS_H
