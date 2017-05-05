@@ -6,8 +6,6 @@
 
 #include <iostream>
 #include <opencv2/core.hpp>
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Eigenvalues>
 
 using namespace std;
 using namespace cv;
