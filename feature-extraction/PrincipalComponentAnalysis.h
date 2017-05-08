@@ -14,16 +14,19 @@ class PrincipalComponentAnalysis {
 private:
     Mat fruitGroup;
 
-    void normalizeValues(vector<double> &values);
+    void normalizeFeatures();
 
     Mat calculateCovarianceMatrix();
+
+    Mat transformInputValues(Mat eigenVectors);
 
 public:
     PrincipalComponentAnalysis();
 
     Mat performPCA(int count);
 
-    void addFruitFeatures(vector<double> fruitFeatures);
+    void addFruitData(vector<double> fruitData);
+
 };
 
 #endif //FRUITRECOGNITION_PRINCIPALCOMPONENTANALYSIS_H

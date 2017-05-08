@@ -34,7 +34,7 @@ void segmentImage(Mat &rgbImage, const Mat &thresholdImage) {
 map<String, vector<String>> getAllFileNames() {
     map<String, vector<String>> filenames;
     String folder = "FIDS30/";
-    
+
     for (String fruit: fruits) {
         vector<String> filesForFruit;
         glob(folder + fruit, filesForFruit);
@@ -59,23 +59,31 @@ void fillHolesInThreshold(const Mat &grayImage, Mat &thresholdImage) {
 }
 
 int main(int argc, char **argv) {
-    namedWindow("Display frame", CV_WINDOW_AUTOSIZE);
-    //namedWindow("RGB Image", CV_WINDOW_AUTOSIZE);
-    //namedWindow("Gray Image", CV_WINDOW_AUTOSIZE);
-
-//    vector<double> a = {2.5, 0.5, 2.2, 1.9, 3.1, 2.3, 2, 1, 1.5, 1.1};
-//    vector<double> b = {2.4, 0.7, 2.9, 2.2, 3.0, 2.7, 1.6, 1.1, 1.6, 0.9};
-//
-//    shared_ptr<PrincipalComponentAnalysis> covTest(new PrincipalComponentAnalysis());
-//    covTest->addFruitFeatures(a);
-//    covTest->addFruitFeatures(b);
-//
-//    covTest->performPCA(14);
-
     map<String, vector<String>> filenames = getAllFileNames();
 
     for (int i = 0; i < fruits->length(); i++) {
         shared_ptr<PrincipalComponentAnalysis> pca(new PrincipalComponentAnalysis());
+//        vector<double> a = {2.5, 2.4};
+//        vector<double> b = {0.5, 0.7};
+//        vector<double> c = {2.2, 2.9};
+//        vector<double> d = {1.9, 2.2};
+//        vector<double> e = {3.1, 3.0};
+//        vector<double> f = {2.3, 2.7};
+//        vector<double> g = {2, 1.6};
+//        vector<double> h = {1, 1.1};
+//        vector<double> k = {1.5, 1.6};
+//        vector<double> j = {1.1, 0.9};
+//        pca->addFruitData(a);
+//        pca->addFruitData(b);
+//        pca->addFruitData(c);
+//        pca->addFruitData(d);
+//        pca->addFruitData(e);
+//        pca->addFruitData(f);
+//        pca->addFruitData(g);
+//        pca->addFruitData(h);
+//        pca->addFruitData(k);
+//        pca->addFruitData(j);
+
 
         for (String fruitFile: filenames[fruits[i]]) {
             Mat rgbImage;
@@ -86,7 +94,7 @@ int main(int argc, char **argv) {
                 cout << fruitFile << endl;
                 printf("No image data \n");
             } else {
-                int px = 400;
+                int px = 300;
                 Size size(px, px);
                 Mat grayImage, outputImage;
                 rgbImage.copyTo(outputImage);
@@ -99,7 +107,7 @@ int main(int argc, char **argv) {
                 grayImage.copyTo(outputImage);
                 resize(outputImage, outputImage, size);
                 imshow("2. normal Image", outputImage);
-                moveWindow("2. normal Image", px+10, 0);
+                moveWindow("2. normal Image", px + 10, 0);
 
                 shared_ptr<Quadtree> root(new Quadtree(grayImage));
                 root->splitAndMerge();
@@ -107,7 +115,7 @@ int main(int argc, char **argv) {
                 grayImage.copyTo(outputImage);
                 resize(outputImage, outputImage, size);
                 imshow("3. Gray Image after Split and Merge", outputImage);
-                moveWindow("3. Gray Image after Split and Merge", 2*(px+10), 0);
+                moveWindow("3. Gray Image after Split and Merge", 2 * (px + 10), 0);
 
                 Mat thresholdImage;
                 fillHolesInThreshold(grayImage, thresholdImage);
@@ -115,24 +123,25 @@ int main(int argc, char **argv) {
                 thresholdImage.copyTo(outputImage);
                 resize(outputImage, outputImage, size);
                 imshow("4. Otsu's treshold with hole filling", outputImage);
-                moveWindow("4. Otsu's treshold with hole filling", 0, px+10);
+                moveWindow("4. Otsu's treshold with hole filling", 0, px + 50);
 
                 segmentImage(rgbImage, thresholdImage);
 
                 resize(rgbImage, rgbImage, size);
-                imshow("Display frame", rgbImage);
-                moveWindow("Display frame", px+10, px+10);
+                imshow("Final image", rgbImage);
+                moveWindow("Final image", px + 10, px + 50);
 
                 vector<double> extractedFeatures = extractColorHistogram(rgbImage);
-                //vector<double> texturen = unser(grayImage);
-                unserTest(grayImage);
-                waitKey(0);
+                vector<double> textures = unser(grayImage);
+                extractedFeatures.insert(extractedFeatures.end(), textures.begin(), textures.end());
+                pca->addFruitData(extractedFeatures);
 
-                //pca->addFruitFeatures(extractedFeatures);
+//                unserTest(grayImage);
+//                waitKey(0);
             }
         }
-        //pca->performPCA(0);
-
+        cout << pca->performPCA(14) << endl;
+        waitKey(0);
     }
     return 0;
 }
