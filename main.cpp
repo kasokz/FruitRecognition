@@ -12,10 +12,10 @@ using namespace std;
 map<String, vector<String>> getAllFileNames();
 
 String fruits[] = {
-        "apples", "apricots", "avocados", "bananas", "blackberries", "blueberries",
-        "cantaloupes", "cherries", "coconuts", "figs", "grapefruits", "grapes", "guava", "kiwifruit",
-        "lemons", "limes", "mangos", "olives", "oranges", "passionfruit", "peaches", "pears", "pineapples",
-        "plums", "pomegranates", "raspberries", "strawberries", "tomatoes", "watermelons"};
+        "apples", "apricots", "avocados", "bananas", "blackberries", "blueberries", "cantaloupes", "cherries",
+        "coconuts", "figs", "grapefruits", "grapes", "guava", "kiwifruit", "lemons", "limes", "mangos", "olives",
+        "oranges", "passionfruit", "peaches", "pears", "pineapples", "plums", "pomegranates", "raspberries",
+        "strawberries", "tomatoes", "watermelons"};
 
 
 void segmentImage(Mat &rgbImage, const Mat &thresholdImage) {
@@ -60,33 +60,23 @@ void fillHolesInThreshold(const Mat &grayImage, Mat &thresholdImage) {
 
 int main(int argc, char **argv) {
     map<String, vector<String>> filenames = getAllFileNames();
+    ofstream csvFile;
+    csvFile.open("fruit_features.csv");
+    for (int i = 0; i < 64; i++) {
+        csvFile << "color" << i << ",";
+    }
+    for (int i = 0; i < 7; i++) {
+        csvFile << "unser" << i << ",";
+    }
+    for (int i = 0; i < 8; i++) {
+        csvFile << "shape" << i << ",";
+    }
+    csvFile << "class" << endl;
 
-    for (int i = 0; i < fruits->length(); i++) {
-        shared_ptr<PrincipalComponentAnalysis> pca(new PrincipalComponentAnalysis());
-//        vector<double> a = {2.5, 2.4};
-//        vector<double> b = {0.5, 0.7};
-//        vector<double> c = {2.2, 2.9};
-//        vector<double> d = {1.9, 2.2};
-//        vector<double> e = {3.1, 3.0};
-//        vector<double> f = {2.3, 2.7};
-//        vector<double> g = {2, 1.6};
-//        vector<double> h = {1, 1.1};
-//        vector<double> k = {1.5, 1.6};
-//        vector<double> j = {1.1, 0.9};
-//        pca->addFruitData(a);
-//        pca->addFruitData(b);
-//        pca->addFruitData(c);
-//        pca->addFruitData(d);
-//        pca->addFruitData(e);
-//        pca->addFruitData(f);
-//        pca->addFruitData(g);
-//        pca->addFruitData(h);
-//        pca->addFruitData(k);
-//        pca->addFruitData(j);
-
-
-        for (String fruitFile: filenames[fruits[i]]) {
+    for (String fruit: fruits) {
+        for (String fruitFile: filenames[fruit]) {
             Mat rgbImage;
+            cout << fruitFile << endl;
 
             rgbImage = imread(fruitFile);
 
@@ -94,55 +84,34 @@ int main(int argc, char **argv) {
                 cout << fruitFile << endl;
                 printf("No image data \n");
             } else {
-                int px = 300;
-                Size size(px, px);
-                Mat grayImage, outputImage;
-                rgbImage.copyTo(outputImage);
+                Mat grayImage;
                 cvtColor(rgbImage, grayImage, COLOR_RGB2GRAY);
-                resize(outputImage, outputImage, size);
-                imshow("1. Input RGB Image", outputImage);
-                moveWindow("1. Input RGB Image", 0, 0);
-
-
-                grayImage.copyTo(outputImage);
-                resize(outputImage, outputImage, size);
-                imshow("2. normal Image", outputImage);
-                moveWindow("2. normal Image", px + 10, 0);
 
                 shared_ptr<Quadtree> root(new Quadtree(grayImage));
                 root->splitAndMerge();
 
-                grayImage.copyTo(outputImage);
-                resize(outputImage, outputImage, size);
-                imshow("3. Gray Image after Split and Merge", outputImage);
-                moveWindow("3. Gray Image after Split and Merge", 2 * (px + 10), 0);
-
                 Mat thresholdImage;
                 fillHolesInThreshold(grayImage, thresholdImage);
 
-                thresholdImage.copyTo(outputImage);
-                resize(outputImage, outputImage, size);
-                imshow("4. Otsu's treshold with hole filling", outputImage);
-                moveWindow("4. Otsu's treshold with hole filling", 0, px + 50);
-
                 segmentImage(rgbImage, thresholdImage);
+                resize(rgbImage, rgbImage, Size(256, 256));
+                resize(grayImage, grayImage, Size(256, 256));
 
-                resize(rgbImage, rgbImage, size);
-                imshow("Final image", rgbImage);
-                moveWindow("Final image", px + 10, px + 50);
-
-                vector<double> extractedFeatures = extractColorHistogram(rgbImage);
-                vector<double> textures = unser(grayImage);
+                vector<double> extractedFeatures = Mat(extractColorHistogram(rgbImage));
+                vector<double> textures = Mat(unser(grayImage));
                 extractedFeatures.insert(extractedFeatures.end(), textures.begin(), textures.end());
-                pca->addFruitData(extractedFeatures);
-
+                Mat features = Mat(1, (int) extractedFeatures.size(), CV_64F);
+                memcpy(features.data, extractedFeatures.data(), extractedFeatures.size() * sizeof(double));
+                csvFile << cv::format(features, cv::Formatter::FMT_CSV) << endl;
+                csvFile << "," << fruit << endl;
 //                unserTest(grayImage);
 //                waitKey(0);
             }
         }
-        cout << pca->performPCA(14) << endl;
-        waitKey(0);
     }
+//    shared_ptr<PrincipalComponentAnalysis> pca(new PrincipalComponentAnalysis());
+//    cout << pca->performPCA(14) << endl;
+    csvFile.close();
     return 0;
 }
 
