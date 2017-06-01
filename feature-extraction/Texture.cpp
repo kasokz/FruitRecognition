@@ -20,7 +20,7 @@ vector<int> histogramOpt(const Mat &grayImage) {
     return hist;
 }
 
-//O(n^3)
+//O(n^3) ... NEVER USER, just for test
 vector<int> histogramLong(const Mat &grayImage) {
     vector<int> hist(256, 0);
     for (int i = 0; i < hist.size(); ++i)
@@ -30,7 +30,7 @@ vector<int> histogramLong(const Mat &grayImage) {
                     hist[i]++;
     return hist;
 }
-
+//to compare 2 ways of histogram calculating O(n^2) and O(n^3) ... NEVER USED
 void histogramCompare(const Mat &grayImage)
 {
     vector<int> h1 = histogramOpt(grayImage);
@@ -123,6 +123,111 @@ double entropy(const vector<double> &p) {
     return -sum;
 }
 
+// = = = = = 2 Level = = = = =
+
+Mat co_occurrence(const Mat &grayImage, int angle)
+{
+    if(angle != 0 && angle != 90)
+        angle = 0;
+    Mat output = Mat::zeros(256, 256, CV_32S);
+    for (int i = 0; i < output.rows; ++i) {
+        for (int j = 0; j < output.cols; ++j) {
+            //for every cell of output co-occurrence matrix should be counted
+            //how much combinations of 2 neighbor cells in the input matrix with gray-values [i] and [j] exist
+            //count 2 neighbors in the same row if angle == 0, and 2 neighbors in the same column if angle == 90
+            for (int k = 0; k < grayImage.rows; ++k) {
+                if (angle == 90 && k == grayImage.rows - 1) break; //to avoid OutOfBound exception, dont run last column
+                for (int l = 0; l < grayImage.cols; ++l) {
+                    if (angle == 0 && l == grayImage.cols - 1) break;
+                    if (angle == 0 && ((grayImage.at<uchar>(k, l) == i && grayImage.at<uchar>(k, l + 1) == j) ||
+                                        (grayImage.at<uchar>(k, l) == j && grayImage.at<uchar>(k, l + 1) == i))) {
+                        output.at<int>(i, j)++;
+                        if (i == j)//to cover both directions
+                            output.at<int>(i, j)++;
+                    } else if (angle == 90 && ((grayImage.at<uchar>(k, l) == i && grayImage.at<uchar>(k + 1, l) == j) ||
+                                                (grayImage.at<uchar>(k, l) == j && grayImage.at<uchar>(k + 1, l) == i))) {
+                        output.at<int>(i, j)++;
+                        if (i == j)
+                            output.at<int>(i, j)++;
+                    }
+                }
+            }
+        }
+    }
+    return output;
+}
+//just test method NEVER USED
+void co_occurrenceTest()
+{
+    vector<int> arr = {0,0,1,1,0,0,1,1,0,2,2,2,2,2,3,3};
+    Mat in = Mat(4,4,CV_32S, arr.data());
+    print(in);
+    cout << endl << endl;
+    Mat out = co_occurrence(in);
+    print(out);
+}
+
+double energy2(const Mat &mat)
+{
+    double sum = 0;
+    for (int i = 0; i < mat.rows; ++i)
+        for (int j = 0; j < mat.cols; ++j)
+            sum += pow(mat.at<int>(i, j), 2);
+    return sum;
+}
+
+double correlation(const Mat &mat)
+{
+    //TODO
+}
+
+double interia(const Mat &mat)
+{
+    double sum = 0;
+    for (int i = 0; i < mat.rows; ++i)
+        for (int j = 0; j < mat.cols; ++j)
+            sum += pow(i-j,2)*mat.at<int>(i,j);
+    return sum;
+}
+
+double absoluteValue(const Mat &mat)
+{
+    double sum = 0;
+    for (int i = 0; i < mat.rows; ++i)
+        for (int j = 0; j < mat.cols; ++j)
+            sum += abs(i-j)*mat.at<int>(i,j);
+    return sum;
+}
+
+double inverseDifference(const Mat &mat)
+{
+    double sum = 0;
+    for (int i = 0; i < mat.rows; ++i)
+        for (int j = 0; j < mat.cols; ++j)
+            sum += mat.at<int>(i,j)/(1+pow(i-j,2));
+    return sum;
+}
+
+double entropy2(const Mat &mat)
+{
+    double sum = 0;
+    for (int i = 0; i < mat.rows; ++i)
+        for (int j = 0; j < mat.cols; ++j)
+            if(mat.at<int>(i,j) > 0)
+                sum += mat.at<int>(i,j) * log2(mat.at<int>(i,j));
+    return -sum;
+}
+
+int maxP(const Mat &mat)
+{
+    int max = -1;
+    for (int i = 0; i < mat.rows; ++i)
+        for (int j = 0; j < mat.cols; ++j)
+            if(mat.at<int>(i,j) > max)
+                max = mat.at<int>(i,j);
+    return max;
+}
+
 vector<double> unser(const Mat &grayImage)
 {
     vector<double> probabilities = probability(histogramOpt(grayImage), grayImage.cols*grayImage.rows);
@@ -131,15 +236,24 @@ vector<double> unser(const Mat &grayImage)
     vector<double> results;
     results.push_back(meanValue);
     results.push_back(varianceValue);
-    results.push_back(contrast(probabilities)); //Paper
-    results.push_back(homogenity(probabilities)); //Paper
+    results.push_back(contrast(probabilities)); //Orig Paper
+    results.push_back(homogenity(probabilities)); //Orig Paper
     results.push_back(skewness(probabilities, meanValue, varianceValue)); //PL
     results.push_back(kurtosis(probabilities, meanValue, varianceValue)); //PL
     results.push_back(energy(probabilities));
     results.push_back(entropy(probabilities));
+    /*
+    Mat co_occurrenceMatrix = co_occurrence(grayImage);
+    results.push_back(energy2(co_occurrenceMatrix));
+    results.push_back(interia(co_occurrenceMatrix));
+    results.push_back(absoluteValue(co_occurrenceMatrix));
+    results.push_back(inverseDifference(co_occurrenceMatrix));
+    results.push_back(entropy2(co_occurrenceMatrix));
+    results.push_back(maxP(co_occurrenceMatrix));
+    */
     return results;
 }
-
+//another test NEVER USED
 vector<double> unserHist(const Mat &grayImage)
 {
     vector<int> histInt = histogramOpt(grayImage);

@@ -21,6 +21,8 @@ double skewness(const vector<double> &p, double mean, double variance);
 double kurtosis(const vector<double> &p, double mean, double variance);
 double energy(const vector<double> &p);
 double entropy(const vector<double> &p);
+Mat co_occurrence(const Mat &grayImage, int angle = 0);
+void co_occurrenceTest();
 vector<double> unser(const Mat &grayImage);
 vector<double> unserHist(const Mat &grayImage);
 void unserTest(const Mat &grayImage);
