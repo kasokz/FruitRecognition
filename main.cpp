@@ -1,6 +1,6 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
-#include <memory>
+#include <opencv2/ml/ml.hpp>
 #include "segmentation/Quadtree.h"
 #include "feature-extraction/Color.h"
 #include "feature-extraction/Texture.h"
@@ -17,6 +17,17 @@ String fruits[] = {
         "oranges", "passionfruit", "peaches", "pears", "pineapples", "plums", "pomegranates", "raspberries",
         "strawberries", "tomatoes", "watermelons"};
 
+int getIndexOfFruit(string fruitname) {
+    int i = 0;
+    for (String s: fruits) {
+        if (s == fruitname) {
+            break;
+        } else {
+            i++;
+        }
+    }
+    return i;
+}
 
 void segmentImage(Mat &rgbImage, const Mat &thresholdImage) {
     for (int row = 0; row < rgbImage.rows; ++row) {
@@ -98,8 +109,7 @@ void createDatasetAsCsv() {
                 vector<double> extractedFeatures = Mat(extractColorHistogram(rgbImage));
                 vector<double> textures = Mat(unser(grayImage));
                 extractedFeatures.insert(extractedFeatures.end(), textures.begin(), textures.end());
-                Mat features = Mat(1, (int) extractedFeatures.size(), CV_64F);
-                memcpy(features.data, extractedFeatures.data(), extractedFeatures.size() * sizeof(double));
+                Mat features = Mat(1, (int) extractedFeatures.size(), CV_64F, extractedFeatures.data());
                 csvFile << cv::format(features, cv::Formatter::FMT_CSV);
                 csvFile << "," << fruit << endl;
 //                unserTest(grayImage);
@@ -114,29 +124,58 @@ int main(int argc, char **argv) {
     ifstream inputfile("fruit_features.csv");
     string current_line;
     vector<vector<double>> all_data;
+    vector<string> responses;
     while (getline(inputfile, current_line)) {
-        // Now inside each line we need to seperate the cols
         vector<double> values;
         stringstream temp(current_line);
         string single_value;
+        int count = 0;
         while (getline(temp, single_value, ',')) {
-            // convert the string element to a integer value
-            values.push_back(atoi(single_value.c_str()));
+            if (count == 72) {
+                responses.push_back(single_value.c_str());
+                count++;
+            } else {
+                values.push_back(atof(single_value.c_str()));
+                count++;
+            }
         }
-        // add the row to the complete data vector
         all_data.push_back(values);
     }
-
-    for (vector<double> a : all_data) {
-        for(double b : a) {
-            cout << b << ",";
-        }
-        cout << endl;
-    }
+    all_data.erase(all_data.begin());
+    responses.erase(responses.begin());
 
     shared_ptr<PrincipalComponentAnalysis> pca(new PrincipalComponentAnalysis());
-    //    cout << pca->performPCA(14) << endl;
+    for (vector<double> a: all_data) {
+        pca->addFruitData(a);
+    }
+    Mat reducedFeatures = pca->performPCA(72);
+    reducedFeatures = reducedFeatures.t();
 
+    reducedFeatures.convertTo(reducedFeatures, CV_32F);
+    Mat responseIndices = Mat(0, 0, CV_32S);
+    for (string response: responses) {
+        responseIndices.push_back(getIndexOfFruit(response));
+    }
+    Ptr<ml::TrainData> trainData = ml::TrainData::create(reducedFeatures, ml::SampleTypes::ROW_SAMPLE, responseIndices);
+    Ptr<ml::SVM> svm = ml::SVM::create();
+    svm->setType(ml::SVM::C_SVC);
+    svm->setKernel(ml::SVM::RBF);
+    svm->trainAuto(trainData, 5);
+
+    Mat result;
+    svm->predict(reducedFeatures, result);
+
+    int correctPredictions = 0;
+    int sumPredictions = 0;
+    for (int i = 0; i < responseIndices.rows; i++) {
+        cout << "Predicted: " << result.at<float>(i) << ", Actual: " << responseIndices.at<int>(i) << endl;
+        sumPredictions++;
+        if (result.at<float>(i) == responseIndices.at<int>(i)) {
+            correctPredictions++;
+        }
+    }
+    cout << "Correct Predictions: " << correctPredictions << "(" << setprecision(4)
+         << ((double) correctPredictions / sumPredictions) * 100 << "%)" << endl;
     return 0;
 }
 

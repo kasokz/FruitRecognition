@@ -12,7 +12,7 @@ using namespace cv;
 
 class PrincipalComponentAnalysis {
 private:
-    Mat fruitGroup;
+    Mat fruitFeatures;
 
     void normalizeFeatures();
 

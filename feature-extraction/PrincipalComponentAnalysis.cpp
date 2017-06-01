@@ -17,34 +17,33 @@ Mat PrincipalComponentAnalysis::performPCA(int count) {
 }
 
 void PrincipalComponentAnalysis::normalizeFeatures() {
-    for (int row = 0; row < fruitGroup.rows; row++) {
-        Scalar mean, standardDeviation;
-        meanStdDev(fruitGroup.row(row), mean, standardDeviation);
-        for (int col = 0; col < fruitGroup.cols; col++) {
-            fruitGroup.at<double>(row, col) -= mean[0];
-//            fruitGroup.at<double>(row, col) /= standardDeviation[0];
+    Scalar mean, standardDeviation;
+    meanStdDev(fruitFeatures, mean, standardDeviation);
+    for (int row = 0; row < fruitFeatures.rows; row++) {
+        for (int col = 0; col < fruitFeatures.cols; col++) {
+            fruitFeatures.at<double>(row, col) -= mean[0];
+            fruitFeatures.at<double>(row, col) /= standardDeviation[0];
         }
     }
 }
 
 void PrincipalComponentAnalysis::addFruitData(vector<double> fruitData) {
-    if (fruitGroup.cols == 0) {
-        fruitGroup = Mat(fruitData.size(), 0, CV_64F);
-        hconcat(fruitGroup, Mat(fruitData), fruitGroup);
+    if (fruitFeatures.cols == 0) {
+        fruitFeatures = Mat(fruitData.size(), 1, CV_64F, fruitData.data());
     } else {
-        hconcat(fruitGroup, Mat(fruitData), fruitGroup);
+        hconcat(fruitFeatures, Mat(fruitData), fruitFeatures);
     }
 }
 
 Mat PrincipalComponentAnalysis::calculateCovarianceMatrix() {
     cv::Mat mean, covs;
-    cv::calcCovarMatrix(fruitGroup, covs, mean, CV_COVAR_NORMAL | CV_COVAR_COLS);
-    covs = covs / (fruitGroup.cols - 1);
+    cv::calcCovarMatrix(fruitFeatures, covs, mean, CV_COVAR_NORMAL | CV_COVAR_COLS);
+    covs = covs / (fruitFeatures.cols - 1);
     return covs;
 }
 
 Mat PrincipalComponentAnalysis::transformInputValues(Mat eigenVectors) {
-    Mat result = eigenVectors.t() * fruitGroup;
+    Mat result = eigenVectors.t() * fruitFeatures;
     return result;
 }
 
