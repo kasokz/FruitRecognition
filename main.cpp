@@ -58,28 +58,26 @@ void fillHolesInThreshold(const Mat &grayImage, Mat &thresholdImage) {
     thresholdImage = (thresholdImage | im_floodfill);
 }
 
-int main(int argc, char **argv) {
+void createDatasetAsCsv() {
     map<String, vector<String>> filenames = getAllFileNames();
     ofstream csvFile;
     csvFile.open("fruit_features.csv");
     for (int i = 0; i < 64; i++) {
         csvFile << "color" << i << ",";
     }
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 8; i++) {
         csvFile << "unser" << i << ",";
     }
-    for (int i = 0; i < 8; i++) {
-        csvFile << "shape" << i << ",";
-    }
+//    for (int i = 0; i < 8; i++) {
+//        csvFile << "shape" << i << ",";
+//    }
     csvFile << "class" << endl;
 
     for (String fruit: fruits) {
         for (String fruitFile: filenames[fruit]) {
             Mat rgbImage;
             cout << fruitFile << endl;
-
             rgbImage = imread(fruitFile);
-
             if (!rgbImage.data) {
                 cout << fruitFile << endl;
                 printf("No image data \n");
@@ -102,16 +100,43 @@ int main(int argc, char **argv) {
                 extractedFeatures.insert(extractedFeatures.end(), textures.begin(), textures.end());
                 Mat features = Mat(1, (int) extractedFeatures.size(), CV_64F);
                 memcpy(features.data, extractedFeatures.data(), extractedFeatures.size() * sizeof(double));
-                csvFile << cv::format(features, cv::Formatter::FMT_CSV) << endl;
+                csvFile << cv::format(features, cv::Formatter::FMT_CSV);
                 csvFile << "," << fruit << endl;
 //                unserTest(grayImage);
-//                waitKey(0);
             }
         }
     }
-//    shared_ptr<PrincipalComponentAnalysis> pca(new PrincipalComponentAnalysis());
-//    cout << pca->performPCA(14) << endl;
     csvFile.close();
+}
+
+int main(int argc, char **argv) {
+//    createDatasetAsCsv();
+    ifstream inputfile("fruit_features.csv");
+    string current_line;
+    vector<vector<double>> all_data;
+    while (getline(inputfile, current_line)) {
+        // Now inside each line we need to seperate the cols
+        vector<double> values;
+        stringstream temp(current_line);
+        string single_value;
+        while (getline(temp, single_value, ',')) {
+            // convert the string element to a integer value
+            values.push_back(atoi(single_value.c_str()));
+        }
+        // add the row to the complete data vector
+        all_data.push_back(values);
+    }
+
+    for (vector<double> a : all_data) {
+        for(double b : a) {
+            cout << b << ",";
+        }
+        cout << endl;
+    }
+
+    shared_ptr<PrincipalComponentAnalysis> pca(new PrincipalComponentAnalysis());
+    //    cout << pca->performPCA(14) << endl;
+
     return 0;
 }
 

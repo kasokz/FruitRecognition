@@ -14,6 +14,5 @@ std::vector<double> extractColorHistogram(cv::Mat &image) {
             histogram[blue * 16 + green * 4 + red]++;
         }
     }
-    histogram[63] = 0;
     return histogram;
 }
