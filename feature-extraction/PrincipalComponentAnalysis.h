@@ -6,27 +6,38 @@
 
 #include <iostream>
 #include <opencv2/core.hpp>
+#include <eigen3/Eigen/dense>
 
 using namespace std;
 using namespace cv;
+using namespace Eigen;
 
 class PrincipalComponentAnalysis {
 private:
-    Mat fruitFeatures;
+    vector<vector<double>> fruitFeatures;
 
-    void normalizeFeatures();
+    Mat eigenvalues, eigenvectors, principalComponents;
 
-    Mat calculateCovarianceMatrix();
+    Scalar mean, standardDeviation;
 
-    Mat transformInputValues(Mat eigenVectors);
+    void fitNormalization();
+    
+    Mat calculateCovarianceMatrix(Mat &dataset);
+
+    Mat convertToMat(vector<vector<double>> data);
 
 public:
     PrincipalComponentAnalysis();
 
-    Mat performPCA(int count);
+    void fit(int count);
+
+    void normalize(Mat &data);
+
+    Mat project(const Mat &data);
+
+    Mat backProject(const Mat &data);
 
     void addFruitData(vector<double> fruitData);
-
 };
 
 #endif //FRUITRECOGNITION_PRINCIPALCOMPONENTANALYSIS_H
