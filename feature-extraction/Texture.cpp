@@ -60,7 +60,7 @@ vector<double> probability(const vector<int> hist, int size) {
     return p;
 }
 
-// = = = = BUG IS POSSIBLE = = = =
+// = = = = MATH BUG IS POSSIBLE = = = =
 //in Paper wird mean durch h_sum berechnet
 double mean(const vector<double> &p) {
     double sum = 0;
@@ -69,7 +69,7 @@ double mean(const vector<double> &p) {
     return sum;
 }
 
-// = = = = BUG IS POSSIBLE = = = =
+// = = = = MATH BUG IS POSSIBLE = = = =
 //in Paper wird contrast durch h_diff berechnet
 double contrast(const vector<double> &p) {
     double sum = 0;
