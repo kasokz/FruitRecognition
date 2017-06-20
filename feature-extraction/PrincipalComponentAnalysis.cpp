@@ -67,3 +67,11 @@ Mat PrincipalComponentAnalysis::backProject(const Mat &data) {
     original += mean[0];
     return original;
 }
+
+Mat PrincipalComponentAnalysis::getEigenvalues() {
+    return eigenvalues;
+}
+
+Mat PrincipalComponentAnalysis::getEigenvectors() {
+    return eigenvectors;
+}

@@ -141,7 +141,7 @@ vector<double> shape(const Mat &image) {
     double hull = convexHull(edges);
     results.push_back(hull);
     results.push_back(areaValue/hull);
-    convexHull(edges);
-    imshow("Hull", edges);moveWindow("Hull", 500, 500);
+//    convexHull(edges);
+//    imshow("Hull", edges);moveWindow("Hull", 500, 500);
     return results;
 }
