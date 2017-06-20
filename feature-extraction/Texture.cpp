@@ -123,48 +123,31 @@ double entropy(const vector<double> &p) {
     return -sum;
 }
 
-// = = = = = 2 Level = = = = =
+// = = = = = Advanced features = = = = =
 
 Mat co_occurrence(const Mat &grayImage, int angle)
 {
     if(angle != 0 && angle != 90)
         angle = 0;
     Mat output = Mat::zeros(256, 256, CV_32S);
-    for (int i = 0; i < output.rows; ++i) {
-        for (int j = 0; j < output.cols; ++j) {
-            //for every cell of output co-occurrence matrix should be counted
-            //how much combinations of 2 neighbor cells in the input matrix with gray-values [i] and [j] exist
-            //count 2 neighbors in the same row if angle == 0, and 2 neighbors in the same column if angle == 90
-            for (int k = 0; k < grayImage.rows; ++k) {
-                if (angle == 90 && k == grayImage.rows - 1) break; //to avoid OutOfBound exception, dont run last column
-                for (int l = 0; l < grayImage.cols; ++l) {
-                    if (angle == 0 && l == grayImage.cols - 1) break;
-                    if (angle == 0 && ((grayImage.at<uchar>(k, l) == i && grayImage.at<uchar>(k, l + 1) == j) ||
-                                        (grayImage.at<uchar>(k, l) == j && grayImage.at<uchar>(k, l + 1) == i))) {
-                        output.at<int>(i, j)++;
-                        if (i == j)//to cover both directions
-                            output.at<int>(i, j)++;
-                    } else if (angle == 90 && ((grayImage.at<uchar>(k, l) == i && grayImage.at<uchar>(k + 1, l) == j) ||
-                                                (grayImage.at<uchar>(k, l) == j && grayImage.at<uchar>(k + 1, l) == i))) {
-                        output.at<int>(i, j)++;
-                        if (i == j)
-                            output.at<int>(i, j)++;
-                    }
-                }
-            }
+    int horizontal = angle == 0 ? 1 : 0;
+    int vertical = angle == 90 ? 1 : 0;
+    for (int i = 0; i < grayImage.rows - vertical; ++i) {
+        for (int j = 0; j < grayImage.cols - horizontal; ++j) {
+            output.at<int>(grayImage.at<uchar>(i, j), grayImage.at<uchar>(i+vertical, j+horizontal))++;
+            output.at<int>(grayImage.at<uchar>(i+vertical, j+horizontal), grayImage.at<uchar>(i, j))++;
         }
     }
     return output;
 }
-//just test method NEVER USED
+
+//test method NEVER USED
 void co_occurrenceTest()
 {
     vector<int> arr = {0,0,1,1,0,0,1,1,0,2,2,2,2,2,3,3};
-    Mat in = Mat(4,4,CV_32S, arr.data());
-    print(in);
-    cout << endl << endl;
+    Mat in = Mat(4, 4, CV_32S, arr.data());
     Mat out = co_occurrence(in);
-    print(out);
+    cout << in << endl << endl << out << endl << endl;
 }
 
 double energy2(const Mat &mat)
@@ -178,7 +161,38 @@ double energy2(const Mat &mat)
 
 double correlation(const Mat &mat)
 {
-    //TODO
+    vector<double> meanX, meanY, staDevX, staDevY;
+    double sum;
+    for (int i = 0; i < mat.rows; ++i) {
+        sum = 0;
+        for (int j = 0; j < mat.cols; ++j)
+            sum += mat.at<int>(i, j);
+        meanX.push_back(sum/mat.cols);
+    }
+    for (int j = 0; j < mat.cols; ++j) {
+        sum = 0;
+        for (int i = 0; i < mat.rows; ++i)
+            sum += mat.at<int>(i, j);
+        meanY.push_back(sum/mat.rows);
+    }
+    for (int i = 0; i < mat.rows; ++i) {
+        sum = 0;
+        for (int j = 0; j < mat.cols; ++j)
+            sum += pow(mat.at<int>(i, j)-meanX[i], 2);
+        staDevX.push_back(sqrt(sum/mat.cols));
+    }
+    for (int j = 0; j < mat.cols; ++j) {
+        sum = 0;
+        for (int i = 0; i < mat.rows; ++i)
+            sum += pow(mat.at<int>(i, j) - meanY[j], 2);
+        staDevY.push_back(sqrt(sum/mat.rows));
+    }
+    sum = 0;
+    for (int i = 0; i < mat.rows; ++i)
+        for (int j = 0; j < mat.cols; ++j)
+            if(staDevX[j] != 0 && staDevY[i] != 0)
+                sum += (i*j*mat.at<int>(i, j) - meanX[j]*meanY[i]) / (staDevX[j]*staDevY[i]);
+    return sum;
 }
 
 double interia(const Mat &mat)
@@ -242,15 +256,14 @@ vector<double> unser(const Mat &grayImage)
     results.push_back(kurtosis(probabilities, meanValue, varianceValue)); //PL
     results.push_back(energy(probabilities));
     results.push_back(entropy(probabilities));
-    /*
     Mat co_occurrenceMatrix = co_occurrence(grayImage);
     results.push_back(energy2(co_occurrenceMatrix));
+    results.push_back(correlation(co_occurrenceMatrix));
     results.push_back(interia(co_occurrenceMatrix));
     results.push_back(absoluteValue(co_occurrenceMatrix));
     results.push_back(inverseDifference(co_occurrenceMatrix));
     results.push_back(entropy2(co_occurrenceMatrix));
     results.push_back(maxP(co_occurrenceMatrix));
-    */
     return results;
 }
 //another test NEVER USED
