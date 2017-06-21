@@ -2,6 +2,7 @@
 // Created by Long Bui on 25.04.17.
 //
 
+//#include <rpcndr.h>
 #include "Shape.h"
 
 int area(const Mat &image) {
@@ -95,7 +96,6 @@ int convexHull(const Mat &edgedImage) {
     int minY = INT_MAX;
     int startX = -1;
     int startY = -1;
-    int startIndex = -1;
     for (int i = 0; i < edgedImage.rows; i++)
         for (int j = 0; j < edgedImage.cols; j++)
             if(edgedImage.at<uchar>(i,j) != 255) {
@@ -104,9 +104,9 @@ int convexHull(const Mat &edgedImage) {
                     minY = i;
                     startX = j;
                     startY = i;
-                    startIndex = points.size()-1;
                 }
             }
+
     vector<vector<int>> hullPoints;
     int i = 0, endX = -1, endY = -1;
     do{
@@ -122,13 +122,67 @@ int convexHull(const Mat &edgedImage) {
         startY = endY;
         i++;
     }while(!(endX == hullPoints[0][1] && endY == hullPoints[0][0]));
+
     Mat buffer = Mat::zeros(edgedImage.size(), CV_8UC1);
+    Mat copyOwn;
+    edgedImage.copyTo(copyOwn);
+
     for (int l = 0; l < buffer.rows; ++l)
         for (int j = 0; j < buffer.cols; ++j)
             buffer.at<uchar>(l,j) = 255;
     for (int k = 0; k < hullPoints.size(); ++k)
-        bresenham(buffer, hullPoints[k][1], hullPoints[k][0], hullPoints[(k+1)%hullPoints.size()][1], hullPoints[(k+1)%hullPoints.size()][0]);
+        //bresenham(buffer, hullPoints[k][1], hullPoints[k][0], hullPoints[(k+1)%hullPoints.size()][1], hullPoints[(k+1)%hullPoints.size()][0]);
+        bresenham(copyOwn, hullPoints[k][1], hullPoints[k][0], hullPoints[(k+1)%hullPoints.size()][1], hullPoints[(k+1)%hullPoints.size()][0]);
+    imshow("Own Func", copyOwn);
+    moveWindow("Own Func", 450, 0);
+
     return area(buffer);
+}
+
+int convexHullWithLib(const Mat &edgedImage) {
+    vector<Point> ps;
+    for (int i = 0; i < edgedImage.rows; i++)
+        for (int j = 0; j < edgedImage.cols; j++)
+            if(edgedImage.at<uchar>(i,j) != 255)
+                ps.push_back(Point(j, i));
+    Mat out = Mat::zeros(edgedImage.rows, edgedImage.cols, CV_32S);
+    convexHull(ps, out);
+
+    Mat copyLib;
+    edgedImage.copyTo(copyLib);
+    for (int i = 0; i < out.rows; ++i)
+        bresenham(copyLib,
+                  out.at<int>(i, 0),
+                  out.at<int>(i, 1),
+                  out.at<int>((i+1)%out.rows, 0),
+                  out.at<int>((i+1)%out.rows, 1)
+        );
+    //cout << out.at<int>(i, 0) << " || " << out.at<int>(i, 1) << endl;
+    imshow("Lib", copyLib);
+    moveWindow("Lib", 900, 0);
+    return -1;
+}
+
+vector<double> ellipse(const Mat &image)
+{
+    vector<uchar> array;
+    if (image.isContinuous())
+        array.assign(image.datastart, image.dataend);
+    else
+        for (int i = 0; i < image.rows; ++i)
+            array.insert(array.end(), image.ptr<uchar>(i), image.ptr<uchar>(i)+image.cols);
+    Mat mat(array.size(), 1, CV_8U, array.data());
+
+    Mat mean, covMat;
+    calcCovarMatrix(mat, covMat, mean, CV_COVAR_NORMAL | CV_COVAR_ROWS);
+    covMat = covMat / (mat.rows - 1);
+//TODO
+    cout << "Mean: " << mean.rows << "x" << mean.cols << " | covM: " << mean.rows << "x" << mean.cols << endl;
+    Mat eigenvalues, eigenvectors;
+    eigen(covMat, eigenvalues, eigenvectors);
+    cout << "Eigenvalues: " << eigenvalues.rows << "x" << eigenvalues.cols << " | Eigenvectors: " << eigenvectors.rows << "x" << eigenvectors.cols << endl;
+    cout << eigenvalues.at<double>(0,0) << "\t" << eigenvectors.at<double>(0,0) << endl;
+    return vector<double>();
 }
 
 vector<double> shape(const Mat &image) {
@@ -139,9 +193,10 @@ vector<double> shape(const Mat &image) {
     int perimeter = area(edges);
     results.push_back((double)perimeter);// perimeter of the object
     double hull = convexHull(edges);
+    double hull2 = convexHullWithLib(edges);
     results.push_back(hull);
     results.push_back(areaValue/hull);
-    convexHull(edges);
-    imshow("Hull", edges);moveWindow("Hull", 500, 500);
+
+    //vector<double> ellValues = ellipse(image);
     return results;
 }
