@@ -19,7 +19,9 @@ struct ImageWithClass {
 
 const int numOfColorFeatures = 64;
 const int numOfTextureFeatures = 8;
-const int numOfShapeFeatures = 4;
+const int numOfShapeFeatures = 7;
+
+void printDataToCsv(const Mat &data, const Mat &trainingResponseAsIndex);
 
 void performTest(int componentCount,
                  const Mat &trainingDataAsMat, const Mat &testDataAsMat,
@@ -47,34 +49,30 @@ void startCLI(shared_ptr<PrincipalComponentAnalysis> &pca, const Ptr<ml::SVM> &s
 
 String fruits[] = {
         "red_apples",
-        "apricots",
+//        "apricots",
         "avocados",
         "bananas",
-        "blackberries",
-        "blueberries",
-        "cantaloupes",
-        "cherries",
-        "coconuts",
-        "figs",
-        "grapefruits",
-        "grapes",
+//        "blackberries",
+//        "blueberries",
+//        "cantaloupes",
+//        "cherries",
+//        "coconuts",
+//        "grapes",
         "green_apples",
-        "guava",
-        "lemons",
-        "limes",
-        "mangos",
-        "olives",
-        "oranges",
-        "passionfruit",
-        "peaches",
-        "pears",
-        "pineapples",
-        "plums",
-        "pomegranates",
-        "raspberries",
-        "strawberries",
-        "tomatoes",
-        "watermelons"
+//        "green_plantains",
+//        "lemons",
+//        "limes",
+//        "mangos",
+//        "oranges",
+//        "passionfruit",
+//        "peaches",
+//        "pears",
+//        "pineapples",
+//        "plums",
+//        "raspberries",
+//        "strawberries",
+//        "tomatoes",
+//        "watermelons"
 };
 
 int getIndexOfFruit(string fruitname) {
@@ -267,12 +265,14 @@ void readCsvDataset(vector<vector<double>> &trainingDataset, vector<vector<doubl
 
 void startPredictionWithData(const Mat &reducedFeatures, const Mat &responseIndices, const Ptr<ml::SVM> &svm) {
     Mat result;
+    Mat confusionMat = Mat::zeros(sizeof(fruits) / sizeof(*fruits), sizeof(fruits) / sizeof(*fruits), CV_32S);
     svm->predict(reducedFeatures.t(), result);
     int correctPredictions = 0;
     int sumPredictions = 0;
     for (int i = 0; i < responseIndices.rows; i++) {
-        cout << "Predicted: " << fruits[(int) result.at<float>(i)] << ", Actual: " << fruits[responseIndices.at<int>(i)]
-             << endl;
+//        cout << "Predicted: " << fruits[(int) result.at<float>(i)] << ", Actual: " << fruits[responseIndices.at<int>(i)]
+//             << endl;
+        confusionMat.at<int>((int) result.at<float>(i), responseIndices.at<int>(i))++;
         sumPredictions++;
         if (result.at<float>(i) == responseIndices.at<int>(i)) {
             correctPredictions++;
@@ -280,6 +280,7 @@ void startPredictionWithData(const Mat &reducedFeatures, const Mat &responseIndi
     }
     cout << "Correct Predictions: " << correctPredictions << "(" << setprecision(4)
          << ((double) correctPredictions / sumPredictions) * 100 << "%)" << endl;
+    cout << "Confusion Matrix:" << endl << confusionMat << endl;
 }
 
 Mat convertToMat(vector<vector<double>> data) {
@@ -322,6 +323,16 @@ void startCLI(shared_ptr<PrincipalComponentAnalysis> &pca, const Ptr<ml::SVM> &s
     }
 }
 
+void printDataToCsv(const Mat &data, const Mat &trainingResponseAsIndex) {
+    ofstream csvFile;
+    csvFile.open("pca_features.csv");
+    csvFile << "compo1,compo2,compo3,fruit" << endl;
+    Mat transposed = data.t();
+    for (int i = 0; i < transposed.rows; i++) {
+        csvFile << format(transposed.row(i), Formatter::FMT_CSV) << "," << trainingResponseAsIndex.at<int>(i) << endl;
+    }
+}
+
 void performTest(int componentCount,
                  const Mat &trainingDataAsMat, const Mat &testDataAsMat,
                  const Mat &trainingResponsesAsIndex, const Mat &testResponsesAsIndex) {
@@ -329,6 +340,7 @@ void performTest(int componentCount,
     pca->fit(trainingDataAsMat, componentCount);
 
     Mat reducedTrainingData = pca->project(trainingDataAsMat);
+    printDataToCsv(reducedTrainingData, trainingResponsesAsIndex);
     reducedTrainingData.convertTo(reducedTrainingData, CV_32F);
     Ptr<ml::SVM> svm = createAndTrainSvm(reducedTrainingData, trainingResponsesAsIndex);
 
@@ -336,7 +348,7 @@ void performTest(int componentCount,
     reducedTestData.convertTo(reducedTestData, CV_32F);
 
     cout << "Feature Components: " << componentCount << endl;
-    startPredictionWithData(reducedTestData, testResponsesAsIndex, svm);
+    startPredictionWithData(reducedTrainingData, trainingResponsesAsIndex, svm);
 }
 
 void runApplication() {
@@ -367,8 +379,7 @@ void runApplication() {
 //            }
 //        }
 //    }
-    performTest(34, trainingDataAsMat, testDataAsMat, trainingResponsesAsIndex, testResponsesAsIndex);
-    waitKey(0);
+    performTest(3, trainingDataAsMat, testDataAsMat, trainingResponsesAsIndex, testResponsesAsIndex);
 //    startCLI(pca, svm);
 }
 
