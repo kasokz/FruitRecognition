@@ -1,91 +1,49 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
-#include <thread>
+#include <memory>
 #include "segmentation/Quadtree.h"
 #include "feature-extraction/Color.h"
 #include "feature-extraction/Texture.h"
-#include "feature-extraction/PrincipalComponentAnalysis.h"
 #include "feature-extraction/Shape.h"
+#include "feature-extraction/PrincipalComponentAnalysis.h"
 
 using namespace cv;
 using namespace std;
 
-struct ImageWithClass {
-    Mat rgbImage;
-    String fruit;
-
-    ImageWithClass(const Mat &rgbImage, const String &fruit) : rgbImage(rgbImage), fruit(fruit) {}
-};
-
-const int numOfColorFeatures = 64;
-const int numOfTextureFeatures = 8;
-const int numOfShapeFeatures = 7;
-
-void printDataToCsv(const Mat &data, const Mat &trainingResponseAsIndex);
-
-void performTest(int componentCount,
-                 const Mat &trainingDataAsMat, const Mat &testDataAsMat,
-                 const Mat &trainingResponsesAsIndex, const Mat &testResponsesAsIndex);
-
 map<String, vector<String>> getAllFileNames();
 
-void readCsvDataset(vector<vector<double>> &trainingDataset, vector<vector<double>> &testDataset,
-                    vector<string> &trainingResponses, vector<string> &testResponses);
-
-Mat convertToMat(vector<vector<double>> data);
-
-void startPredictionWithData(const Mat &reducedFeatures, Mat &responseIndices, const Ptr<ml::SVM> &svm);
-
-vector<double> extractFeatures(Mat &rgbImage);
-
-void segmentImage(Mat &rgbImage, const Mat &thresholdImage);
-
-Ptr<ml::SVM> createAndTrainSvm(Mat features, Mat responses);
-
-void writeFeaturesToFile(const vector<vector<double>> &featuresThread1, const vector<String> &fruitsThread1,
-                         ofstream &csvFile);
-
-void startCLI(shared_ptr<PrincipalComponentAnalysis> &pca, const Ptr<ml::SVM> &svm);
-
 String fruits[] = {
-        "red_apples",
+//        "red_apples",
 //        "apricots",
-        "avocados",
-        "bananas",
+//        "avocados",
+//        "bananas",
 //        "blackberries",
 //        "blueberries",
 //        "cantaloupes",
 //        "cherries",
 //        "coconuts",
+//        "figs",
+//        "grapefruits",
 //        "grapes",
-        "green_apples",
-//        "green_plantains",
+//        "green_apples",
+//        "guava",
 //        "lemons",
 //        "limes",
 //        "mangos",
+//        "olives",
 //        "oranges",
 //        "passionfruit",
 //        "peaches",
 //        "pears",
 //        "pineapples",
 //        "plums",
+//        "pomegranates",
 //        "raspberries",
-//        "strawberries",
+        "strawberries",
 //        "tomatoes",
 //        "watermelons"
 };
 
-int getIndexOfFruit(string fruitname) {
-    int i = 0;
-    for (String s: fruits) {
-        if (s == fruitname) {
-            break;
-        } else {
-            i++;
-        }
-    }
-    return i;
-}
 
 void segmentImage(Mat &rgbImage, const Mat &thresholdImage) {
     for (int row = 0; row < rgbImage.rows; ++row) {
@@ -102,7 +60,9 @@ void segmentImage(Mat &rgbImage, const Mat &thresholdImage) {
 
 map<String, vector<String>> getAllFileNames() {
     map<String, vector<String>> filenames;
-    String folder = "fruit_dataset/";
+    String folder = "FIDS30/";
+    folder = "c:\\Users\\Nord\\CLionProjects\\FruitRecognition\\fruit_dataset\\";
+
     for (String fruit: fruits) {
         vector<String> filesForFruit;
         glob(folder + fruit, filesForFruit);
@@ -126,265 +86,85 @@ void fillHolesInThreshold(const Mat &grayImage, Mat &thresholdImage) {
     thresholdImage = (thresholdImage | im_floodfill);
 }
 
-void threadFunction(vector<ImageWithClass> imagesWithClass, vector<vector<double>> &features,
-                    vector<String> &fruits) {
-    for (ImageWithClass imageWithClass: imagesWithClass) {
-        vector<double> extractedFeatures = extractFeatures(imageWithClass.rgbImage);
-        features.push_back(extractedFeatures);
-        fruits.push_back(imageWithClass.fruit);
-    }
-}
+int main(int argc, char **argv) {
+    //namedWindow("Display frame", CV_WINDOW_AUTOSIZE);
+    //namedWindow("RGB Image", CV_WINDOW_AUTOSIZE);
+    //namedWindow("Gray Image", CV_WINDOW_AUTOSIZE);
 
-void createDatasetAsCsv() {
+//    vector<double> a = {2.5, 0.5, 2.2, 1.9, 3.1, 2.3, 2, 1, 1.5, 1.1};
+//    vector<double> b = {2.4, 0.7, 2.9, 2.2, 3.0, 2.7, 1.6, 1.1, 1.6, 0.9};
+//
+//    shared_ptr<PrincipalComponentAnalysis> covTest(new PrincipalComponentAnalysis());
+//    covTest->addFruitFeatures(a);
+//    covTest->addFruitFeatures(b);
+//
+//    covTest->performPCA(14);
+
+
+//*
     map<String, vector<String>> filenames = getAllFileNames();
-    vector<vector<ImageWithClass>> threadDatasets;
-    threadDatasets.push_back(vector<ImageWithClass>());
-    threadDatasets.push_back(vector<ImageWithClass>());
-    threadDatasets.push_back(vector<ImageWithClass>());
-    threadDatasets.push_back(vector<ImageWithClass>());
-    int indexOfDataset = 0;
-    for (String fruit: fruits) {
-        for (String fruitFile: filenames[fruit]) {
+
+    for (int i = 0; i < fruits->length(); i++) {
+        shared_ptr<PrincipalComponentAnalysis> pca(new PrincipalComponentAnalysis());
+        for (String fruitFile: filenames[fruits[i]]) {
             Mat rgbImage;
+
             rgbImage = imread(fruitFile);
+
             if (!rgbImage.data) {
                 cout << fruitFile << endl;
                 printf("No image data \n");
             } else {
-                threadDatasets[indexOfDataset % 4].push_back(ImageWithClass(rgbImage, fruit));
-                indexOfDataset++;
+                int px = 400;
+                Size size(px, px);
+                Mat grayImage, outputImage;
+                rgbImage.copyTo(outputImage);
+                cvtColor(rgbImage, grayImage, COLOR_RGB2GRAY);
+                resize(outputImage, outputImage, size);
+                imshow("1. Input RGB Image", outputImage);
+                moveWindow("1. Input RGB Image", 0, 0);
+
+
+                grayImage.copyTo(outputImage);
+                resize(outputImage, outputImage, size);
+                imshow("2. normal Image", outputImage);
+                moveWindow("2. normal Image", px+10, 0);
+
+                shared_ptr<Quadtree> root(new Quadtree(grayImage));
+                root->splitAndMerge();
+
+                grayImage.copyTo(outputImage);
+                resize(outputImage, outputImage, size);
+                imshow("3. Gray Image after Split and Merge", outputImage);
+                moveWindow("3. Gray Image after Split and Merge", 2*(px+10), 0);
+
+                Mat thresholdImage;
+                fillHolesInThreshold(grayImage, thresholdImage);
+                grayImage.copyTo(thresholdImage);
+
+                thresholdImage.copyTo(outputImage);
+                resize(outputImage, outputImage, size);
+                imshow("4. Otsu's treshold with hole filling", outputImage);
+                moveWindow("4. Otsu's treshold with hole filling", 0, px+10);
+
+                segmentImage(rgbImage, thresholdImage);
+
+                resize(rgbImage, rgbImage, size);
+                imshow("Display frame", rgbImage);
+                moveWindow("Display frame", px+10, px+10);
+
+                Mat gray2;
+                cvtColor(rgbImage, gray2, COLOR_RGB2GRAY);
+                resize(gray2, gray2, size);
+                imshow("Gray 2", gray2);
+                moveWindow("Gray 2", 2*(px+10), (px+10));
+                //moveWindow("Gray 2", 0, 0);
+                shape(gray2);
+                waitKey(0);
             }
         }
     }
-    vector<vector<double>> featuresThread1;
-    vector<vector<double>> featuresThread2;
-    vector<vector<double>> featuresThread3;
-    vector<vector<double>> featuresThread4;
-    vector<String> fruitsThread1;
-    vector<String> fruitsThread2;
-    vector<String> fruitsThread3;
-    vector<String> fruitsThread4;
-    thread thread1(threadFunction, threadDatasets[0], ref(featuresThread1), ref(fruitsThread1));
-    thread thread2(threadFunction, threadDatasets[1], ref(featuresThread2), ref(fruitsThread2));
-    thread thread3(threadFunction, threadDatasets[2], ref(featuresThread3), ref(fruitsThread3));
-    thread thread4(threadFunction, threadDatasets[3], ref(featuresThread4), ref(fruitsThread4));
-    thread1.join();
-    thread2.join();
-    thread3.join();
-    thread4.join();
+//*/
 
-    ofstream csvFile;
-    csvFile.open("fruit_features.csv");
-    for (int i = 0; i < numOfColorFeatures; i++) {
-        csvFile << "color" << i << ",";
-    }
-    for (int i = 0; i < numOfTextureFeatures; i++) {
-        csvFile << "unser" << i << ",";
-    }
-    for (int i = 0; i < numOfShapeFeatures; i++) {
-        csvFile << "shape" << i << ",";
-    }
-    csvFile << "class" << endl;
-
-    writeFeaturesToFile(featuresThread1, fruitsThread1, csvFile);
-    writeFeaturesToFile(featuresThread2, fruitsThread2, csvFile);
-    writeFeaturesToFile(featuresThread3, fruitsThread3, csvFile);
-    writeFeaturesToFile(featuresThread4, fruitsThread4, csvFile);
-
-    csvFile.close();
-}
-
-void writeFeaturesToFile(const vector<vector<double>> &featuresThread, const vector<String> &fruitsThread,
-                         ofstream &csvFile) {
-    for (int i = 0; i < featuresThread.size(); i++) {
-        vector<double> extractedFeatures = featuresThread[i];
-        Mat features = Mat(1, (int) extractedFeatures.size(), CV_64F, extractedFeatures.data());
-        csvFile << format(features, Formatter::FMT_CSV);
-        csvFile << "," << fruitsThread[i] << endl;
-    }
-}
-
-vector<double> extractFeatures(Mat &rgbImage) {
-    Mat grayImage;
-    cvtColor(rgbImage, grayImage, COLOR_RGB2GRAY);
-
-    shared_ptr<Quadtree> root(new Quadtree(grayImage));
-    root->splitAndMerge();
-
-    Mat thresholdImage;
-    fillHolesInThreshold(grayImage, thresholdImage);
-
-    segmentImage(rgbImage, thresholdImage);
-    cvtColor(rgbImage, grayImage, COLOR_RGB2GRAY);
-
-    vector<double> extractedFeatures;
-    vector<double> colors = extractColorHistogram(rgbImage);
-    vector<double> textures = unser(grayImage);
-    vector<double> shapes = shape(grayImage);
-    for (int i = 0; i < numOfColorFeatures; i++) {
-        extractedFeatures.push_back(colors[i]);
-    }
-    for (int i = 0; i < numOfTextureFeatures; i++) {
-        extractedFeatures.push_back(textures[i]);
-    }
-    for (int i = 0; i < numOfShapeFeatures; i++) {
-        extractedFeatures.push_back(shapes[i]);
-    }
-    return extractedFeatures;
-}
-
-void readCsvDataset(vector<vector<double>> &trainingDataset, vector<vector<double>> &testDataset,
-                    vector<string> &trainingResponses, vector<string> &testResponses) {
-    ifstream inputfile("fruit_features.csv");
-    string current_line;
-    int lineCounter = 0;
-    while (getline(inputfile, current_line)) {
-        if (lineCounter++ != 0) {
-            vector<double> values;
-            string response;
-            stringstream temp(current_line);
-            string currentToken;
-            int count = 0;
-            while (getline(temp, currentToken, ',')) {
-                if (count++ == numOfColorFeatures + numOfTextureFeatures + numOfShapeFeatures) {
-                    response = currentToken.c_str();
-                } else {
-                    values.push_back(atof(currentToken.c_str()));
-                }
-            }
-            if (lineCounter % 5 == 0) {
-                testDataset.push_back(values);
-                testResponses.push_back(response);
-            } else {
-                trainingDataset.push_back(values);
-                trainingResponses.push_back(response);
-            }
-        }
-    }
-}
-
-void startPredictionWithData(const Mat &reducedFeatures, const Mat &responseIndices, const Ptr<ml::SVM> &svm) {
-    Mat result;
-    Mat confusionMat = Mat::zeros(sizeof(fruits) / sizeof(*fruits), sizeof(fruits) / sizeof(*fruits), CV_32S);
-    svm->predict(reducedFeatures.t(), result);
-    int correctPredictions = 0;
-    int sumPredictions = 0;
-    for (int i = 0; i < responseIndices.rows; i++) {
-//        cout << "Predicted: " << fruits[(int) result.at<float>(i)] << ", Actual: " << fruits[responseIndices.at<int>(i)]
-//             << endl;
-        confusionMat.at<int>((int) result.at<float>(i), responseIndices.at<int>(i))++;
-        sumPredictions++;
-        if (result.at<float>(i) == responseIndices.at<int>(i)) {
-            correctPredictions++;
-        }
-    }
-    cout << "Correct Predictions: " << correctPredictions << "(" << setprecision(4)
-         << ((double) correctPredictions / sumPredictions) * 100 << "%)" << endl;
-    cout << "Confusion Matrix:" << endl << confusionMat << endl;
-}
-
-Mat convertToMat(vector<vector<double>> data) {
-    Mat result((int) data.size(), (int) data[0].size(), CV_64F);
-    for (int i = 0; i < data.size(); i++) {
-        for (int j = 0; j < data[i].size(); j++) {
-            result.at<double>(i, j) = data[i][j];
-        }
-    }
-    return result;
-}
-
-Ptr<ml::SVM> createAndTrainSvm(Mat features, Mat responses) {
-    Ptr<ml::TrainData> trainData = ml::TrainData::create(features, ml::SampleTypes::COL_SAMPLE, responses);
-    Ptr<ml::SVM> svm = ml::SVM::create();
-    svm->setType(ml::SVM::C_SVC);
-    svm->setKernel(ml::SVM::RBF);
-    svm->trainAuto(trainData, 5);
-    return svm;
-}
-
-void startCLI(shared_ptr<PrincipalComponentAnalysis> &pca, const Ptr<ml::SVM> &svm) {
-    while (true) {
-        string filename;
-        cout << "Dateiname eingeben: " << endl;
-        getline(cin, filename);
-        if (filename == "quit") {
-            break;
-        }
-        Mat rgbImage = imread(filename);
-        if (!rgbImage.data) {
-            printf("No image data \n");
-        } else {
-            vector<double> extractedFeatures = extractFeatures(rgbImage);
-            Mat testImage((int) extractedFeatures.size(), 1, CV_64F, extractedFeatures.data());
-            testImage = pca->project(testImage.t());
-            testImage.convertTo(testImage, CV_32F);
-            cout << svm->predict(testImage.t()) << endl;
-        }
-    }
-}
-
-void printDataToCsv(const Mat &data, const Mat &trainingResponseAsIndex) {
-    ofstream csvFile;
-    csvFile.open("pca_features.csv");
-    csvFile << "compo1,compo2,compo3,fruit" << endl;
-    Mat transposed = data.t();
-    for (int i = 0; i < transposed.rows; i++) {
-        csvFile << format(transposed.row(i), Formatter::FMT_CSV) << "," << trainingResponseAsIndex.at<int>(i) << endl;
-    }
-}
-
-void performTest(int componentCount,
-                 const Mat &trainingDataAsMat, const Mat &testDataAsMat,
-                 const Mat &trainingResponsesAsIndex, const Mat &testResponsesAsIndex) {
-    shared_ptr<PrincipalComponentAnalysis> pca(new PrincipalComponentAnalysis());
-    pca->fit(trainingDataAsMat, componentCount);
-
-    Mat reducedTrainingData = pca->project(trainingDataAsMat);
-    printDataToCsv(reducedTrainingData, trainingResponsesAsIndex);
-    reducedTrainingData.convertTo(reducedTrainingData, CV_32F);
-    Ptr<ml::SVM> svm = createAndTrainSvm(reducedTrainingData, trainingResponsesAsIndex);
-
-    Mat reducedTestData = pca->project(testDataAsMat);
-    reducedTestData.convertTo(reducedTestData, CV_32F);
-
-    cout << "Feature Components: " << componentCount << endl;
-    startPredictionWithData(reducedTrainingData, trainingResponsesAsIndex, svm);
-}
-
-void runApplication() {
-    vector<vector<double>> trainingDataset, testDataset;
-    vector<string> trainingResponses, testResponses;
-    readCsvDataset(trainingDataset, testDataset, trainingResponses,
-                   testResponses);
-    Mat trainingDataAsMat = convertToMat(trainingDataset);
-    Mat testDataAsMat = convertToMat(testDataset);
-    Mat trainingResponsesAsIndex = Mat(0, 0, CV_32S);
-    for (string response: trainingResponses) {
-        trainingResponsesAsIndex.push_back(getIndexOfFruit(response));
-    }
-    Mat testResponsesAsIndex = Mat(0, 0, CV_32S);
-    for (string response: testResponses) {
-        testResponsesAsIndex.push_back(getIndexOfFruit(response));
-    }
-//    thread threads[4];
-//
-//    for (int i = 1; i <= numOfColorFeatures + numOfTextureFeatures + numOfShapeFeatures; i++) {
-//        threads[(i - 1) % (sizeof(threads) / sizeof(threads[0]))] = thread(performTest, i,
-//                                                                           ref(trainingDataAsMat), ref(testDataAsMat),
-//                                                                           ref(trainingResponsesAsIndex),
-//                                                                           ref(testResponsesAsIndex));
-//        if (i != 0 && i % (sizeof(threads) / sizeof(threads[0])) == 0) {
-//            for (int threadIndex = 0; threadIndex < (sizeof(threads) / sizeof(threads[0])); threadIndex++) {
-//                threads[threadIndex].join();
-//            }
-//        }
-//    }
-    performTest(3, trainingDataAsMat, testDataAsMat, trainingResponsesAsIndex, testResponsesAsIndex);
-//    startCLI(pca, svm);
-}
-
-int main(int argc, char **argv) {
-    createDatasetAsCsv();
-    runApplication();
     return 0;
 }

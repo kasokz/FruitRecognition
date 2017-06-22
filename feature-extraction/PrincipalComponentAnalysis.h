@@ -6,11 +6,9 @@
 
 #include <iostream>
 #include <opencv2/core.hpp>
-#include <eigen3/Eigen/dense>
 
 using namespace std;
 using namespace cv;
-using namespace Eigen;
 
 class PrincipalComponentAnalysis {
 private:
