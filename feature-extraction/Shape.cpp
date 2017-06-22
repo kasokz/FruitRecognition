@@ -2,7 +2,6 @@
 // Created by Long Bui on 25.04.17.
 //
 
-//#include <rpcndr.h>
 #include "Shape.h"
 
 int area(const Mat &image) {
@@ -90,7 +89,7 @@ void bresenham(Mat &image, int x1, int y1, int x2, int y2)
 }
 
 //number of pixels of the convex hull - Jarvis algorithm
-int convexHull(const Mat &edgedImage) {
+double convexHull(const Mat &edgedImage) {
     vector<vector<int>> points; //all edge points of object
     //find the point with smallest ordinate (y-coordinate)
     int minY = INT_MAX;
@@ -106,7 +105,6 @@ int convexHull(const Mat &edgedImage) {
                     startY = i;
                 }
             }
-
     vector<vector<int>> hullPoints;
     int i = 0, endX = -1, endY = -1;
     do{
@@ -123,6 +121,7 @@ int convexHull(const Mat &edgedImage) {
         i++;
     }while(!(endX == hullPoints[0][1] && endY == hullPoints[0][0]));
 
+    /*
     Mat buffer = Mat::zeros(edgedImage.size(), CV_8UC1);
     Mat copyOwn;
     edgedImage.copyTo(copyOwn);
@@ -130,16 +129,22 @@ int convexHull(const Mat &edgedImage) {
     for (int l = 0; l < buffer.rows; ++l)
         for (int j = 0; j < buffer.cols; ++j)
             buffer.at<uchar>(l,j) = 255;
+    for (int k = 0; k < hullPoints.size(); ++k) {
+        bresenham(buffer, hullPoints[k][1], hullPoints[k][0], hullPoints[(k+1)%hullPoints.size()][1], hullPoints[(k+1)%hullPoints.size()][0]);
+        bresenham(copyOwn, hullPoints[k][1], hullPoints[k][0], hullPoints[(k + 1) % hullPoints.size()][1],
+                  hullPoints[(k + 1) % hullPoints.size()][0]);
+    }
+    */
+    double sum = 0;
     for (int k = 0; k < hullPoints.size(); ++k)
-        //bresenham(buffer, hullPoints[k][1], hullPoints[k][0], hullPoints[(k+1)%hullPoints.size()][1], hullPoints[(k+1)%hullPoints.size()][0]);
-        bresenham(copyOwn, hullPoints[k][1], hullPoints[k][0], hullPoints[(k+1)%hullPoints.size()][1], hullPoints[(k+1)%hullPoints.size()][0]);
-    imshow("Own Func", copyOwn);
-    moveWindow("Own Func", 450, 0);
-
-    return area(buffer);
+        sum += sqrt(pow(hullPoints[k][1] - hullPoints[(k+1)%hullPoints.size()][1], 2) + pow(hullPoints[k][0] - hullPoints[(k+1)%hullPoints.size()][0], 2));
+    //imshow("Own Func", copyOwn);moveWindow("Own Func", 450, 0);
+    //int areaVal = area(buffer);
+    //cout << "Own Algo: " << sum << " vs. " << areaVal << endl;
+    return sum;
 }
 
-int convexHullWithLib(const Mat &edgedImage) {
+double convexHullWithLib(const Mat &edgedImage) {
     vector<Point> ps;
     for (int i = 0; i < edgedImage.rows; i++)
         for (int j = 0; j < edgedImage.cols; j++)
@@ -154,17 +159,31 @@ int convexHullWithLib(const Mat &edgedImage) {
         bresenham(copyLib,
                   out.at<int>(i, 0),
                   out.at<int>(i, 1),
-                  out.at<int>((i+1)%out.rows, 0),
-                  out.at<int>((i+1)%out.rows, 1)
+                  out.at<int>((i + 1) % out.rows, 0),
+                  out.at<int>((i + 1) % out.rows, 1)
         );
-    //cout << out.at<int>(i, 0) << " || " << out.at<int>(i, 1) << endl;
-    imshow("Lib", copyLib);
-    moveWindow("Lib", 900, 0);
-    return -1;
+
+    double sum = 0;
+    for (int i = 0; i < out.rows; ++i)
+        sum += sqrt(pow(out.at<int>(i, 0) - out.at<int>((i+1)%out.rows, 0), 2) + pow(out.at<int>(i, 1) - out.at<int>((i+1)%out.rows, 1), 2));
+    //imshow("Lib", copyLib);
+    //moveWindow("Lib", 900, 0);
+    //cout << "Lib Algo: " << sum << endl;
+    return sum;
 }
 
-vector<double> ellipse(const Mat &image)
+vector<double> ellipse(const Mat &image, const Mat &edgedImage)
 {
+    vector<Point> ps;
+    for (int i = 0; i < edgedImage.rows; i++)
+        for (int j = 0; j < edgedImage.cols; j++)
+            if(edgedImage.at<uchar>(i,j) != 255)
+                ps.push_back(Point(j, i));
+    RotatedRect ell = fitEllipse(ps);
+    cout << ell.size.height << " || " << ell.size.width << endl;
+    ellipse(image, ell, 0, 2);
+    imshow("Ellipse", image);
+    moveWindow("Ellipse", 450, 0);
     vector<uchar> array;
     if (image.isContinuous())
         array.assign(image.datastart, image.dataend);
@@ -174,14 +193,24 @@ vector<double> ellipse(const Mat &image)
     Mat mat(array.size(), 1, CV_8U, array.data());
 
     Mat mean, covMat;
-    calcCovarMatrix(mat, covMat, mean, CV_COVAR_NORMAL | CV_COVAR_ROWS);
-    covMat = covMat / (mat.rows - 1);
+    calcCovarMatrix(image, covMat, mean, CV_COVAR_NORMAL | CV_COVAR_ROWS);
+    covMat = covMat / (image.rows - 1);
 //TODO
-    cout << "Mean: " << mean.rows << "x" << mean.cols << " | covM: " << mean.rows << "x" << mean.cols << endl;
+    //cout << "Mean: " << mean.rows << "x" << mean.cols << " | covM: " << mean.rows << "x" << mean.cols << endl;
     Mat eigenvalues, eigenvectors;
     eigen(covMat, eigenvalues, eigenvectors);
-    cout << "Eigenvalues: " << eigenvalues.rows << "x" << eigenvalues.cols << " | Eigenvectors: " << eigenvectors.rows << "x" << eigenvectors.cols << endl;
-    cout << eigenvalues.at<double>(0,0) << "\t" << eigenvectors.at<double>(0,0) << endl;
+    //cout << "Eigenvalues: " << eigenvalues.rows << "x" << eigenvalues.cols << " | Eigenvectors: " << eigenvectors.rows << "x" << eigenvectors.cols << endl;
+    //cout << eigenvalues.at<double>(0,0) << "\t" << eigenvectors.at<double>(0,0) << endl;
+    double maxValue = DBL_MIN;
+    double minValue = DBL_MAX;
+    for (int i = 0; 0 && i < eigenvalues.rows; ++i) {
+        //cout << eigenvalues.at<double>(i) << ", ";
+        if(eigenvalues.at<double>(i) > maxValue)
+            maxValue = eigenvalues.at<double>(i);
+        if(eigenvalues.at<double>(i) < minValue)
+            minValue = eigenvalues.at<double>(i);
+    }
+    //cout << maxValue << " || " << minValue << endl;
     return vector<double>();
 }
 
@@ -193,10 +222,13 @@ vector<double> shape(const Mat &image) {
     int perimeter = area(edges);
     results.push_back((double)perimeter);// perimeter of the object
     double hull = convexHull(edges);
-    double hull2 = convexHullWithLib(edges);
     results.push_back(hull);
     results.push_back(areaValue/hull);
 
     //vector<double> ellValues = ellipse(image);
+    vector<double> ellValues = ellipse(image, edges);
+
+
+    double majorAxisLength, minorAxisLength;
     return results;
 }
