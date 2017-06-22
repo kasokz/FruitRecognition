@@ -257,13 +257,13 @@ vector<double> unser(const Mat &grayImage)
     results.push_back(energy(probabilities));
     results.push_back(entropy(probabilities));
     Mat co_occurrenceMatrix = co_occurrence(grayImage);
-    results.push_back(energy2(co_occurrenceMatrix));
-    results.push_back(correlation(co_occurrenceMatrix));
-    results.push_back(interia(co_occurrenceMatrix));
+//    results.push_back(energy2(co_occurrenceMatrix));
+//    results.push_back(correlation(co_occurrenceMatrix));
+//    results.push_back(interia(co_occurrenceMatrix));
     results.push_back(absoluteValue(co_occurrenceMatrix));
     results.push_back(inverseDifference(co_occurrenceMatrix));
-    results.push_back(entropy2(co_occurrenceMatrix));
-    results.push_back(maxP(co_occurrenceMatrix));
+//    results.push_back(entropy2(co_occurrenceMatrix));
+//    results.push_back(maxP(co_occurrenceMatrix));
     return results;
 }
 //another test NEVER USED

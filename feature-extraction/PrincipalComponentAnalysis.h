@@ -14,30 +14,24 @@ using namespace Eigen;
 
 class PrincipalComponentAnalysis {
 private:
-    vector<vector<double>> fruitFeatures;
-
     Mat eigenvalues, eigenvectors, principalComponents;
 
     Scalar mean, standardDeviation;
 
-    void fitNormalization();
-    
-    Mat calculateCovarianceMatrix(Mat &dataset);
+    void fitNormalization(Mat fruitFeatures);
 
-    Mat convertToMat(vector<vector<double>> data);
+    Mat calculateCovarianceMatrix(Mat &dataset);
 
 public:
     PrincipalComponentAnalysis();
 
-    void fit(int count);
+    void fit(const Mat &fruitFeatures, int count);
 
     void normalize(Mat &data);
 
     Mat project(const Mat &data);
 
     Mat backProject(const Mat &data);
-
-    void addFruitData(vector<double> fruitData);
 
     Mat getEigenvalues();
 

@@ -14,20 +14,8 @@ Mat PrincipalComponentAnalysis::calculateCovarianceMatrix(Mat &dataset) {
     return covs;
 }
 
-
-Mat PrincipalComponentAnalysis::convertToMat(vector<vector<double>> data) {
-    Mat result((int) data.size(), (int) data[0].size(), CV_64F);
-    for (int i = 0; i < data.size(); i++) {
-        for (int j = 0; j < data[i].size(); j++) {
-            result.at<double>(i, j) = data[i][j];
-        }
-    }
-    return result;
-}
-
-void PrincipalComponentAnalysis::fitNormalization() {
-    Mat featuresAsMat = convertToMat(fruitFeatures);
-    meanStdDev(featuresAsMat, mean, standardDeviation);
+void PrincipalComponentAnalysis::fitNormalization(Mat fruitFeatures) {
+    meanStdDev(fruitFeatures, mean, standardDeviation);
 }
 
 void PrincipalComponentAnalysis::normalize(Mat &data) {
@@ -39,15 +27,12 @@ void PrincipalComponentAnalysis::normalize(Mat &data) {
     }
 }
 
-void PrincipalComponentAnalysis::addFruitData(vector<double> fruitData) {
-    fruitFeatures.push_back(fruitData);
-}
-
-void PrincipalComponentAnalysis::fit(int count) {
-    Mat featuresAsMat = this->convertToMat(fruitFeatures);
-    fitNormalization();
-    normalize(featuresAsMat);
-    Mat covarianceMatrix = calculateCovarianceMatrix(featuresAsMat);
+void PrincipalComponentAnalysis::fit(const Mat &fruitFeatures, int count) {
+    Mat copy;
+    fruitFeatures.copyTo(copy);
+    fitNormalization(fruitFeatures);
+    normalize(copy);
+    Mat covarianceMatrix = calculateCovarianceMatrix(copy);
     eigen(covarianceMatrix, this->eigenvalues, this->eigenvectors);
     this->principalComponents = Mat(this->eigenvectors, Range(0, count), Range(0, this->eigenvectors.rows));
 }
