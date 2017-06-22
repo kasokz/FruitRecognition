@@ -38,6 +38,10 @@ public:
     Mat backProject(const Mat &data);
 
     void addFruitData(vector<double> fruitData);
+
+    Mat getEigenvalues();
+
+    Mat getEigenvectors();
 };
 
 #endif //FRUITRECOGNITION_PRINCIPALCOMPONENTANALYSIS_H
