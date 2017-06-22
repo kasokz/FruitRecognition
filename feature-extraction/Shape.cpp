@@ -172,48 +172,6 @@ double convexHullWithLib(const Mat &edgedImage) {
     return sum;
 }
 
-vector<double> ellipse(const Mat &image, const Mat &edgedImage)
-{
-    vector<Point> ps;
-    for (int i = 0; i < edgedImage.rows; i++)
-        for (int j = 0; j < edgedImage.cols; j++)
-            if(edgedImage.at<uchar>(i,j) != 255)
-                ps.push_back(Point(j, i));
-    RotatedRect ell = fitEllipse(ps);
-    cout << ell.size.height << " || " << ell.size.width << endl;
-    ellipse(image, ell, 0, 2);
-    imshow("Ellipse", image);
-    moveWindow("Ellipse", 450, 0);
-    vector<uchar> array;
-    if (image.isContinuous())
-        array.assign(image.datastart, image.dataend);
-    else
-        for (int i = 0; i < image.rows; ++i)
-            array.insert(array.end(), image.ptr<uchar>(i), image.ptr<uchar>(i)+image.cols);
-    Mat mat(array.size(), 1, CV_8U, array.data());
-
-    Mat mean, covMat;
-    calcCovarMatrix(image, covMat, mean, CV_COVAR_NORMAL | CV_COVAR_ROWS);
-    covMat = covMat / (image.rows - 1);
-//TODO
-    //cout << "Mean: " << mean.rows << "x" << mean.cols << " | covM: " << mean.rows << "x" << mean.cols << endl;
-    Mat eigenvalues, eigenvectors;
-    eigen(covMat, eigenvalues, eigenvectors);
-    //cout << "Eigenvalues: " << eigenvalues.rows << "x" << eigenvalues.cols << " | Eigenvectors: " << eigenvectors.rows << "x" << eigenvectors.cols << endl;
-    //cout << eigenvalues.at<double>(0,0) << "\t" << eigenvectors.at<double>(0,0) << endl;
-    double maxValue = DBL_MIN;
-    double minValue = DBL_MAX;
-    for (int i = 0; 0 && i < eigenvalues.rows; ++i) {
-        //cout << eigenvalues.at<double>(i) << ", ";
-        if(eigenvalues.at<double>(i) > maxValue)
-            maxValue = eigenvalues.at<double>(i);
-        if(eigenvalues.at<double>(i) < minValue)
-            minValue = eigenvalues.at<double>(i);
-    }
-    //cout << maxValue << " || " << minValue << endl;
-    return vector<double>();
-}
-
 vector<double> shape(const Mat &image) {
     vector<double> results;
     double areaValue = area(image);
@@ -225,10 +183,18 @@ vector<double> shape(const Mat &image) {
     results.push_back(hull);
     results.push_back(areaValue/hull);
 
-    //vector<double> ellValues = ellipse(image);
-    vector<double> ellValues = ellipse(image, edges);
-
-
-    double majorAxisLength, minorAxisLength;
+    vector<Point> ps;
+    for (int i = 0; i < edges.rows; i++)
+        for (int j = 0; j < edges.cols; j++)
+            if(edges.at<uchar>(i,j) != 255)
+                ps.push_back(Point(j, i));
+    RotatedRect ell = fitEllipse(ps);
+    ellipse(image, ell, 0, 2);
+    //imshow("Ellipse", image);moveWindow("Ellipse", 450, 0);
+    double majorAxisLength = ell.size.height > ell.size.width ? ell.size.height : ell.size.width;
+    double minorAxisLength = ell.size.height < ell.size.width ? ell.size.height : ell.size.width;
+    results.push_back(majorAxisLength);
+    results.push_back(minorAxisLength);
+    results.push_back(sqrt(1-pow(minorAxisLength/majorAxisLength, 2))); //Eccentricity of the ellipse
     return results;
 }
