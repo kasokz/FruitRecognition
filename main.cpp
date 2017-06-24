@@ -1,6 +1,6 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
-#include <thread>
+#include "threads/mingw.thread.h"
 #include "segmentation/Quadtree.h"
 #include "feature-extraction/Color.h"
 #include "feature-extraction/Texture.h"
@@ -52,18 +52,18 @@ void startCLI(shared_ptr<PrincipalComponentAnalysis> &pca, const Ptr<ml::SVM> &s
 void printConfusionMat(const Mat &confusionMat);
 
 String fruits[] = {
-        "red_apples",
+//        "red_apples",
 //        "apricots",
-        "avocados",
-        "bananas",
+//        "avocados",
+//        "bananas",
 //        "blackberries",
 //        "blueberries",
 //        "cantaloupes",
 //        "cherries",
 //        "coconuts",
 //        "grapes",
-        "green_apples",
-        "green_plantains",
+//        "green_apples",
+//        "green_plantains",
 //        "lemons",
 //        "limes",
 //        "mangos",
@@ -74,9 +74,9 @@ String fruits[] = {
 //        "pineapples",
 //        "plums",
         "raspberries",
-        "strawberries",
-        "tomatoes",
-        "watermelons"
+//        "strawberries",
+//        "tomatoes",
+//        "watermelons"
 };
 
 int getIndexOfFruit(string fruitname) {
@@ -493,8 +493,8 @@ void show(){
 }
 
 int main(int argc, char **argv) {
-    createDatasetAsCsv();
-    runApplication();
-    //show();
+    //createDatasetAsCsv();
+    //runApplication();
+    show();
     return 0;
 }
