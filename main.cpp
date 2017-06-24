@@ -29,7 +29,7 @@ void performTest(int componentCount,
                  const Mat &trainingDataAsMat, const Mat &testDataAsMat,
                  const Mat &trainingResponsesAsIndex, const Mat &testResponsesAsIndex);
 
-map<String, vector<String>> getAllFileNames();
+map<String, vector<String>> getAllFileNames(String folder);
 
 void readCsvDataset(vector<vector<double>> &trainingDataset, vector<vector<double>> &testDataset,
                     vector<string> &trainingResponses, vector<string> &testResponses);
@@ -104,9 +104,8 @@ void segmentImage(Mat &rgbImage, const Mat &thresholdImage) {
     }
 }
 
-map<String, vector<String>> getAllFileNames() {
+map<String, vector<String>> getAllFileNames(String folder) {
     map<String, vector<String>> filenames;
-    String folder = "fruit_dataset/";
     for (String fruit: fruits) {
         vector<String> filesForFruit;
         glob(folder + fruit, filesForFruit);
@@ -140,7 +139,7 @@ void threadFunction(vector<ImageWithClass> imagesWithClass, vector<vector<double
 }
 
 void createDatasetAsCsv() {
-    map<String, vector<String>> filenames = getAllFileNames();
+    map<String, vector<String>> filenames = getAllFileNames("fruit_dataset/");
     vector<vector<ImageWithClass>> threadDatasets;
     threadDatasets.push_back(vector<ImageWithClass>());
     threadDatasets.push_back(vector<ImageWithClass>());
@@ -426,8 +425,76 @@ void runApplication() {
 //    startCLI(pca, svm);
 }
 
+int px, delta;
+int posX(int x){
+    return x * (px + delta);
+}
+int posY(int y){
+    return y * (px + delta) + (y == 1 ? 30 : 0);
+}
+void show(){
+    map<String, vector<String>> filenames = getAllFileNames("fruit_dataset_big/");
+
+    for (int i = 0; i < fruits->length(); i++) {
+        shared_ptr<PrincipalComponentAnalysis> pca(new PrincipalComponentAnalysis());
+        for (int j = 0; j < filenames[fruits[i]].size(); ++j) {
+            String fruitFile = filenames[fruits[i]][j];
+            Mat rgbImage;
+            rgbImage = imread(fruitFile);
+
+            if (!rgbImage.data) {
+                cout << fruitFile << endl;
+                printf("No image data \n");
+            } else {
+                px = 450;
+                delta = 10;
+                Size size(px, px);
+                Mat grayImage, outputImage;
+                rgbImage.copyTo(outputImage);
+                resize(outputImage, outputImage, size);
+                imshow("1. Input Image", outputImage);
+                moveWindow("1. Input Image", posX(0), posY(0));
+
+                cvtColor(rgbImage, grayImage, COLOR_RGB2GRAY);
+                shared_ptr<Quadtree> root(new Quadtree(grayImage));
+                root->splitAndMerge();
+
+                grayImage.copyTo(outputImage);
+                resize(outputImage, outputImage, size);
+                imshow("2. Grayscale Image after Split and Merge", outputImage);
+                moveWindow("2. Grayscale Image after Split and Merge", posX(1), posY(0));
+
+                Mat thresholdImage;
+                fillHolesInThreshold(grayImage, thresholdImage);
+
+                thresholdImage.copyTo(outputImage);
+                resize(outputImage, outputImage, size);
+                imshow("3. Otsu's treshold with hole filling", outputImage);
+                moveWindow("3. Otsu's treshold with hole filling", posX(2), posY(0));
+
+                segmentImage(rgbImage, thresholdImage);
+
+                resize(rgbImage, rgbImage, size);
+                imshow("4. Segmented Image", rgbImage);
+                moveWindow("4. Segmented Image", posX(3), posY(0));
+
+                extractColorHistogram(rgbImage);
+                moveWindow("Reduced colors", posX(0) + px/2, posY(1));
+                Mat gray2;
+                cvtColor(rgbImage, gray2, COLOR_RGB2GRAY);
+                shape(gray2);
+                moveWindow("Convex Hull", posX(1) + px/2, posY(1));
+                moveWindow("Ellipse", posX(2) + px/2, posY(1));
+                if (waitKey(0) == 'a' && j != 0)
+                    j -= 2;
+            }
+        }
+    }
+}
+
 int main(int argc, char **argv) {
     createDatasetAsCsv();
     runApplication();
+    //show();
     return 0;
 }

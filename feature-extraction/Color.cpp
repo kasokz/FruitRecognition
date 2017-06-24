@@ -4,6 +4,8 @@
 #include "Color.h"
 
 std::vector<double> extractColorHistogram(cv::Mat &image) {
+    Mat out;
+    image.copyTo(out);
     std::vector<double> histogram(64, 0);
     for (int row = 0; row < image.rows; row++) {
         for (int col = 0; col < image.cols; col++) {
@@ -12,7 +14,15 @@ std::vector<double> extractColorHistogram(cv::Mat &image) {
             double green = pixel[1] / 64;
             double red = pixel[2] / 64;
             histogram[blue * 16 + green * 4 + red]++;
+            cv::Vec3b *outPixel = out.ptr<cv::Vec3b>(row, col);
+            (*outPixel)[0] /= 64;
+            (*outPixel)[0] *= 64;
+            (*outPixel)[1] /= 64;
+            (*outPixel)[1] *= 64;
+            (*outPixel)[2] /= 64;
+            (*outPixel)[2] *= 64;
         }
     }
+    imshow("Reduced colors", out);
     return histogram;
 }

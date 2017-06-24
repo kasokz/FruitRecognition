@@ -12,7 +12,7 @@ int area(const Mat &image) {
                 sum++;
     return sum;
 }
-
+//not used
 int perimeterAlternative(const Mat &image)
 {
     int perimeter = 0;
@@ -52,7 +52,6 @@ Mat contour(const Mat &image) {
                     image.at<uchar>(i,j-1) != 255 &&
                     image.at<uchar>(i,j+1) != 255)
                 buffer.at<uchar>(i,j) = 255;
-    //imshow("Gray 2", buffer);moveWindow("Gray 2", 0, 0);
     return buffer;
 }
 
@@ -89,7 +88,7 @@ void bresenham(Mat &image, int x1, int y1, int x2, int y2)
 }
 
 //number of pixels of the convex hull - Jarvis algorithm
-double convexHull(const Mat &edgedImage) {
+double convexHull(const Mat &edgedImage, Mat grayImage) {
     vector<vector<int>> points; //all edge points of object
     //find the point with smallest ordinate (y-coordinate)
     int minY = INT_MAX;
@@ -121,26 +120,16 @@ double convexHull(const Mat &edgedImage) {
         i++;
     }while(!(endX == hullPoints[0][1] && endY == hullPoints[0][0]));
 
-    /*
-    Mat buffer = Mat::zeros(edgedImage.size(), CV_8UC1);
-    Mat copyOwn;
-    edgedImage.copyTo(copyOwn);
-
-    for (int l = 0; l < buffer.rows; ++l)
-        for (int j = 0; j < buffer.cols; ++j)
-            buffer.at<uchar>(l,j) = 255;
-    for (int k = 0; k < hullPoints.size(); ++k) {
-        bresenham(buffer, hullPoints[k][1], hullPoints[k][0], hullPoints[(k+1)%hullPoints.size()][1], hullPoints[(k+1)%hullPoints.size()][0]);
-        bresenham(copyOwn, hullPoints[k][1], hullPoints[k][0], hullPoints[(k + 1) % hullPoints.size()][1],
+    Mat fruitWithHull;
+    grayImage.copyTo(fruitWithHull);
+    for (int k = 0; k < hullPoints.size(); ++k)
+        bresenham(fruitWithHull, hullPoints[k][1], hullPoints[k][0],
+                  hullPoints[(k + 1) % hullPoints.size()][1],
                   hullPoints[(k + 1) % hullPoints.size()][0]);
-    }
-    */
     double sum = 0;
     for (int k = 0; k < hullPoints.size(); ++k)
         sum += sqrt(pow(hullPoints[k][1] - hullPoints[(k+1)%hullPoints.size()][1], 2) + pow(hullPoints[k][0] - hullPoints[(k+1)%hullPoints.size()][0], 2));
-    //imshow("Own Func", copyOwn);moveWindow("Own Func", 450, 0);
-    //int areaVal = area(buffer);
-    //cout << "Own Algo: " << sum << " vs. " << areaVal << endl;
+    imshow("Convex Hull", fruitWithHull);
     return sum;
 }
 
@@ -179,7 +168,7 @@ vector<double> shape(const Mat &image) {
     Mat edges = contour(image);
     int perimeter = area(edges);
     results.push_back((double)perimeter);// perimeter of the object
-    double hull = convexHull(edges);
+    double hull = convexHull(edges, image);
     results.push_back(hull);
     results.push_back(areaValue/hull);
 
@@ -190,7 +179,7 @@ vector<double> shape(const Mat &image) {
                 ps.push_back(Point(j, i));
     RotatedRect ell = fitEllipse(ps);
     ellipse(image, ell, 0, 2);
-    //imshow("Ellipse", image);moveWindow("Ellipse", 450, 0);
+    imshow("Ellipse", image);
     double majorAxisLength = ell.size.height > ell.size.width ? ell.size.height : ell.size.width;
     double minorAxisLength = ell.size.height < ell.size.width ? ell.size.height : ell.size.width;
     results.push_back(majorAxisLength);

@@ -5,6 +5,7 @@
 #define FRUITRECOGNITION_COLOR_H
 
 #include <opencv2/opencv.hpp>
+using namespace cv;
 
 std::vector<double> extractColorHistogram(cv::Mat &image);
 
