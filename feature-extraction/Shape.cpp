@@ -120,16 +120,9 @@ double convexHull(const Mat &edgedImage, Mat grayImage) {
         i++;
     }while(!(endX == hullPoints[0][1] && endY == hullPoints[0][0]));
 
-    Mat fruitWithHull;
-    grayImage.copyTo(fruitWithHull);
-    for (int k = 0; k < hullPoints.size(); ++k)
-        bresenham(fruitWithHull, hullPoints[k][1], hullPoints[k][0],
-                  hullPoints[(k + 1) % hullPoints.size()][1],
-                  hullPoints[(k + 1) % hullPoints.size()][0]);
     double sum = 0;
     for (int k = 0; k < hullPoints.size(); ++k)
         sum += sqrt(pow(hullPoints[k][1] - hullPoints[(k+1)%hullPoints.size()][1], 2) + pow(hullPoints[k][0] - hullPoints[(k+1)%hullPoints.size()][0], 2));
-    imshow("Convex Hull", fruitWithHull);
     return sum;
 }
 
@@ -179,7 +172,6 @@ vector<double> shape(const Mat &image) {
                 ps.push_back(Point(j, i));
     RotatedRect ell = fitEllipse(ps);
     ellipse(image, ell, 0, 2);
-    imshow("Ellipse", image);
     double majorAxisLength = ell.size.height > ell.size.width ? ell.size.height : ell.size.width;
     double minorAxisLength = ell.size.height < ell.size.width ? ell.size.height : ell.size.width;
     results.push_back(majorAxisLength);
