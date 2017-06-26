@@ -36,7 +36,7 @@ void readCsvDataset(vector<vector<double>> &trainingDataset, vector<vector<doubl
 
 Mat convertToMat(vector<vector<double>> data);
 
-void startPredictionWithData(const Mat &reducedFeatures, const Mat &responseIndices, const Ptr<ml::SVM> &svm);
+void startPredictionWithData(const Mat &convertedFeatures, const Mat &responseIndices, const Ptr<ml::SVM> &svm);
 
 vector<double> extractFeatures(Mat &rgbImage);
 
@@ -56,10 +56,10 @@ String fruits[] = {
 //        "apricots",
         "avocados",
         "bananas",
-//        "blackberries",
+        "blackberries",
 //        "blueberries",
-//        "cantaloupes",
-//        "cherries",
+        "cantaloupes",
+        "cherries",
 //        "coconuts",
 //        "grapes",
         "green_apples",
@@ -67,13 +67,13 @@ String fruits[] = {
 //        "lemons",
 //        "limes",
 //        "mangos",
-//        "oranges",
+        "oranges",
 //        "passionfruit",
 //        "peaches",
-//        "pears",
+        "pears",
 //        "pineapples",
 //        "plums",
-        "raspberries",
+//        "raspberries",
         "strawberries",
         "tomatoes",
         "watermelons"
@@ -266,10 +266,12 @@ void readCsvDataset(vector<vector<double>> &trainingDataset, vector<vector<doubl
     }
 }
 
-void startPredictionWithData(const Mat &reducedFeatures, const Mat &responseIndices, const Ptr<ml::SVM> &svm) {
+void startPredictionWithData(const Mat &testData, const Mat &responseIndices, const Ptr<ml::SVM> &svm) {
+    Mat convertedFeatures;
+    testData.convertTo(convertedFeatures, CV_32F);
     Mat result;
     Mat confusionMat = Mat::zeros(sizeof(fruits) / sizeof(*fruits), sizeof(fruits) / sizeof(*fruits), CV_32S);
-    svm->predict(reducedFeatures.t(), result);
+    svm->predict(convertedFeatures.t(), result);
     int correctPredictions = 0;
     int sumPredictions = 0;
     for (int i = 0; i < responseIndices.rows; i++) {
@@ -283,7 +285,7 @@ void startPredictionWithData(const Mat &reducedFeatures, const Mat &responseIndi
     }
     cout << "Correct Predictions: " << correctPredictions << "(" << setprecision(4)
          << ((double) correctPredictions / sumPredictions) * 100 << "%)" << endl;
-//    printConfusionMat(confusionMat);
+    printConfusionMat(confusionMat);
 }
 
 string decorateNumber(char character1, int number, char character2) {
@@ -334,11 +336,13 @@ Mat convertToMat(vector<vector<double>> data) {
 }
 
 Ptr<ml::SVM> createAndTrainSvm(Mat features, Mat responses) {
+    features.convertTo(features, CV_32F);
     Ptr<ml::TrainData> trainData = ml::TrainData::create(features, ml::SampleTypes::COL_SAMPLE, responses);
     Ptr<ml::SVM> svm = ml::SVM::create();
     svm->setType(ml::SVM::C_SVC);
     svm->setKernel(ml::SVM::RBF);
-    svm->trainAuto(trainData, 5);
+//    svm->trainAuto(trainData, 5);
+    svm->train(trainData);
     return svm;
 }
 
@@ -378,17 +382,10 @@ void performTest(int componentCount,
                  const Mat &trainingResponsesAsIndex, const Mat &testResponsesAsIndex) {
     shared_ptr<PrincipalComponentAnalysis> pca(new PrincipalComponentAnalysis());
     pca->fit(trainingDataAsMat, componentCount);
-
     Mat reducedTrainingData = pca->project(trainingDataAsMat);
-
 //    printDataToCsv(reducedTrainingData, trainingResponsesAsIndex);
-
-    reducedTrainingData.convertTo(reducedTrainingData, CV_32F);
     Ptr<ml::SVM> svm = createAndTrainSvm(reducedTrainingData, trainingResponsesAsIndex);
-
     Mat reducedTestData = pca->project(testDataAsMat);
-    reducedTestData.convertTo(reducedTestData, CV_32F);
-
     cout << "Feature Components: " << componentCount << endl;
     startPredictionWithData(reducedTestData, testResponsesAsIndex, svm);
 }
@@ -408,25 +405,25 @@ void runApplication() {
     for (string response: testResponses) {
         testResponsesAsIndex.push_back(getIndexOfFruit(response));
     }
-    thread threads[4];
-
-    for (int i = 1; i <= numOfColorFeatures + numOfTextureFeatures + numOfShapeFeatures; i++) {
-        threads[(i - 1) % (sizeof(threads) / sizeof(threads[0]))] = thread(performTest, i,
-                                                                           ref(trainingDataAsMat), ref(testDataAsMat),
-                                                                           ref(trainingResponsesAsIndex),
-                                                                           ref(testResponsesAsIndex));
-        if (i != 0 && i % (sizeof(threads) / sizeof(threads[0])) == 0) {
-            for (int threadIndex = 0; threadIndex < (sizeof(threads) / sizeof(threads[0])); threadIndex++) {
-                threads[threadIndex].join();
-            }
-        }
-    }
-//    performTest(3, trainingDataAsMat, testDataAsMat, trainingResponsesAsIndex, testResponsesAsIndex);
+//    thread threads[4];
+//
+//    for (int i = 1; i <= numOfColorFeatures + numOfTextureFeatures + numOfShapeFeatures; i++) {
+//        threads[(i - 1) % (sizeof(threads) / sizeof(threads[0]))] = thread(performTest, i,
+//                                                                           ref(trainingDataAsMat), ref(testDataAsMat),
+//                                                                           ref(trainingResponsesAsIndex),
+//                                                                           ref(testResponsesAsIndex));
+//        if (i != 0 && i % (sizeof(threads) / sizeof(threads[0])) == 0) {
+//            for (int threadIndex = 0; threadIndex < (sizeof(threads) / sizeof(threads[0])); threadIndex++) {
+//                threads[threadIndex].join();
+//            }
+//        }
+//    }
+    performTest(17, trainingDataAsMat, testDataAsMat, trainingResponsesAsIndex, testResponsesAsIndex);
 //    startCLI(pca, svm);
 }
 
 int main(int argc, char **argv) {
-    createDatasetAsCsv();
+//    createDatasetAsCsv();
     runApplication();
     return 0;
 }
