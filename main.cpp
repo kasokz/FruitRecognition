@@ -73,7 +73,7 @@ String fruits[] = {
         "pears",
 //        "pineapples",
 //        "plums",
-//        "raspberries",
+        "raspberries",
         "strawberries",
         "tomatoes",
         "watermelons"
@@ -353,7 +353,7 @@ void startCLI(shared_ptr<PrincipalComponentAnalysis> &pca, const Ptr<ml::SVM> &s
         if (filename == "quit") {
             break;
         }
-        Mat rgbImage = imread(filename);
+        Mat rgbImage = imread("test-data/" + filename);
         if (!rgbImage.data) {
             printf("No image data \n");
         } else {
@@ -361,7 +361,7 @@ void startCLI(shared_ptr<PrincipalComponentAnalysis> &pca, const Ptr<ml::SVM> &s
             Mat testImage((int) extractedFeatures.size(), 1, CV_64F, extractedFeatures.data());
             testImage = pca->project(testImage.t());
             testImage.convertTo(testImage, CV_32F);
-            cout << svm->predict(testImage.t()) << endl;
+            cout << svm->predict(testImage.t()) + 1 << endl;
         }
     }
 }
@@ -387,6 +387,7 @@ void performTest(int componentCount,
     Mat reducedTestData = pca->project(testDataAsMat);
     cout << "Feature Components: " << componentCount << endl;
     startPredictionWithData(reducedTestData, testResponsesAsIndex, svm);
+    startCLI(pca, svm);
 }
 
 void runApplication() {
@@ -404,8 +405,8 @@ void runApplication() {
     for (string response: testResponses) {
         testResponsesAsIndex.push_back(getIndexOfFruit(response));
     }
-//    thread threads[4];
-//
+    thread threads[4];
+
 //    for (int i = 1; i <= numOfColorFeatures + numOfTextureFeatures + numOfShapeFeatures; i++) {
 //        threads[(i - 1) % (sizeof(threads) / sizeof(threads[0]))] = thread(performTest, i,
 //                                                                           ref(trainingDataAsMat), ref(testDataAsMat),
@@ -417,8 +418,7 @@ void runApplication() {
 //            }
 //        }
 //    }
-    performTest(17, trainingDataAsMat, testDataAsMat, trainingResponsesAsIndex, testResponsesAsIndex);
-//    startCLI(pca, svm);
+    performTest(14, trainingDataAsMat, testDataAsMat, trainingResponsesAsIndex, testResponsesAsIndex);
 }
 
 int main(int argc, char **argv) {
