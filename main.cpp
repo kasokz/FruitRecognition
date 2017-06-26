@@ -341,8 +341,7 @@ Ptr<ml::SVM> createAndTrainSvm(Mat features, Mat responses) {
     Ptr<ml::SVM> svm = ml::SVM::create();
     svm->setType(ml::SVM::C_SVC);
     svm->setKernel(ml::SVM::RBF);
-//    svm->trainAuto(trainData, 5);
-    svm->train(trainData);
+    svm->trainAuto(trainData, 5);
     return svm;
 }
 
