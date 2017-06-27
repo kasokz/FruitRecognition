@@ -387,7 +387,7 @@ void performTest(int componentCount,
     Mat reducedTestData = pca->project(testDataAsMat);
     cout << "Feature Components: " << componentCount << endl;
     startPredictionWithData(reducedTestData, testResponsesAsIndex, svm);
-    startCLI(pca, svm);
+//    startCLI(pca, svm);
 }
 
 void runApplication() {
@@ -405,8 +405,8 @@ void runApplication() {
     for (string response: testResponses) {
         testResponsesAsIndex.push_back(getIndexOfFruit(response));
     }
-    thread threads[4];
 
+//    thread threads[4];
 //    for (int i = 1; i <= numOfColorFeatures + numOfTextureFeatures + numOfShapeFeatures; i++) {
 //        threads[(i - 1) % (sizeof(threads) / sizeof(threads[0]))] = thread(performTest, i,
 //                                                                           ref(trainingDataAsMat), ref(testDataAsMat),
@@ -418,11 +418,11 @@ void runApplication() {
 //            }
 //        }
 //    }
-    performTest(14, trainingDataAsMat, testDataAsMat, trainingResponsesAsIndex, testResponsesAsIndex);
+    performTest(16, trainingDataAsMat, testDataAsMat, trainingResponsesAsIndex, testResponsesAsIndex);
 }
 
 int main(int argc, char **argv) {
-//    createDatasetAsCsv();
+    createDatasetAsCsv();
     runApplication();
     return 0;
 }
